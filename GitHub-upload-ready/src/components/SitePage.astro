@@ -1,0 +1,169 @@
+---
+import { getCollection, getEntry, render } from 'astro:content';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import '../styles/site.css';
+import navigationScript from '../scripts/navigation.js?raw';
+import publicationSync from '../data/publication-sync.json';
+import importedPublications from '../data/publications-auto.json';
+import { mergePublications } from '../lib/publications.mjs';
+const { page = 'home', person: profile } = Astro.props;
+const ProfileContent = profile ? (await render(profile)).Content : null;
+const pageUrl = (id: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/${id === 'home' ? '' : id + '/'}`;
+
+const asset = (path: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/${path}`;
+const byOrder = (a: any, b: any) => a.data.order - b.data.order || a.id.localeCompare(b.id);
+const people = (await getCollection('people', ({ data }) => !data.draft)).sort(byOrder);
+const research = (await getCollection('research', ({ data }) => !data.draft)).sort(byOrder);
+const publications = mergePublications(await getCollection('publications'), importedPublications.publications, publicationSync);
+async function section(id: string) {
+  const entry = await getEntry('sections', id);
+  if (!entry) throw new Error(`Missing content/sections/${id}.md`);
+  return { ...entry.data, ...(await render(entry)) };
+}
+const hero = await section('hero');
+const science = await section('research');
+const team = await section('team');
+const papers = await section('publications');
+const opportunities = await section('opportunities');
+const contact = await section('contact');
+const HeroBody = hero.Content, ResearchBody = science.Content, TeamBody = team.Content;
+const PapersBody = papers.Content, OpportunitiesBody = opportunities.Content, ContactBody = contact.Content;
+for (const path of [...people.flatMap(p => [p.data.photo, p.data.thumbnail]).filter(Boolean), ...research.map(r => r.data.image).filter(p => p && !p.startsWith('https://')), hero.video]) {
+  if (path && !existsSync(resolve('public', path))) throw new Error(`Missing asset: public/${path}`);
+}
+if (!hero.video) throw new Error('Add video: media/lab.webm to content/sections/hero.md');
+const roles = [
+  ['group-leader', 'Group leader'], ['postdoc', 'Postdoctoral associates'],
+  ['phd', 'PhD students'], ['msc', 'MSc students'], ['technician', 'Technical staff'],
+];
+const SectionHeading = page === 'home' ? 'h2' : 'h1';
+const david = people.find(p => p.id === 'david-tilley' && p.data.status === 'current');
+const newsSection = await section('news');
+const NewsBody = newsSection.Content;
+const news = (await getCollection('news', ({ data }) => !data.draft)).sort((a,b) => b.data.date.localeCompare(a.data.date) || byOrder(a,b));
+const formatDate = (date: string) => new Date(date + 'T12:00:00Z').toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'numeric',timeZone:'UTC'});
+
+const alumni = people.filter(p => p.data.status === 'alumni');
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Tilley Research Group at the University of Zurich. Solar fuels, electrosynthesis, and materials chemistry." />
+    <title>{page === 'home' ? contact.title : page === 'person' ? `${profile.data.name} | ${contact.title}` : `${({research: science.title, team: team.title, news: newsSection.title, publications: papers.title, opportunities: opportunities.title, contact: 'Contact'})[page]} | ${contact.title}`}</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23202125'/%3E%3Ctext x='7' y='24' fill='white' font-family='Georgia' font-size='25'%3ET%3C/text%3E%3C/svg%3E" />
+  </head>
+  <body id="top">
+    <a class="skip" href="#content">Skip to content</a>
+    <header><div class="wrap bar">
+      <a class="brand" href={pageUrl('home')}>{contact.title}</a>
+      <nav aria-label="Main navigation">
+        {[['home','Home'],['team',team.title],['research',science.title],['publications',papers.title],['news',newsSection.title],['opportunities',opportunities.title],['contact','Contact']].map(([id,label]) => <a href={pageUrl(id)} aria-current={page === id || (page === 'person' && id === 'team') ? 'page' : undefined}>{label}</a>)}
+      </nav>
+    </div></header>
+    <main id="content" tabindex="-1">
+      {page === 'home' && <>      <section class="hero" id="home">
+        <video id="video" muted loop playsinline preload="metadata" aria-label="Electrochemistry experiment">
+          <source src={asset(hero.video)} type="video/webm" />
+        </video>
+        <div class="wrap"><p>{hero.eyebrow}</p><h1>{hero.title}</h1><p>{hero.subtitle}</p><HeroBody /></div>
+      </section><div class="home-quote wrap"><blockquote><ResearchBody /></blockquote></div></>}
+      {(page === 'research' || page === 'home') && <>      <section class="content" id="research"><div class="wrap">
+        {page !== 'home' && <div class="section-head"><SectionHeading>{science.title}</SectionHeading></div>}
+        <div class={page === 'home' ? 'research-grid' : 'research-details'}>{await Promise.all((page === 'home' ? research.slice(0, 3) : research).map(async entry => {
+          const { Content } = await render(entry);
+          return <article><h3>{page === 'home' ? (entry.data.homeTitle || entry.data.title) : entry.data.title}</h3>{page === 'home' && entry.data.image && <img class="research-image" src={entry.data.image.startsWith('https://') ? entry.data.image : asset(entry.data.image)} alt={entry.data.imageAlt || entry.data.title} loading="lazy" decoding="async" />}{page === 'home' && entry.data.summary ? <p>{entry.data.summary}</p> : <Content />}{page !== 'home' && entry.data.image && <img class="research-image" src={entry.data.image.startsWith('https://') ? entry.data.image : asset(entry.data.image)} alt={entry.data.imageAlt || entry.data.title} loading="lazy" decoding="async" />}</article>;
+        }))}</div>
+        {page === 'home' && <a class="summary-link" href={pageUrl('research')}>Explore our research →</a>}
+      </div></section></>}
+      {page === 'home' && <section class="content team" id="team-preview"><div class="wrap">
+
+        <div class="home-team">
+          {david && <article class="home-leader"><h3>David Tilley</h3>{david.data.photo && <a class="home-leader-link" href={pageUrl(`team/${david.id}`)} aria-label="View David Tilley’s profile"><img src={asset(david.data.photo)} alt={david.data.name} width={david.data.photoWidth || 1200} height={david.data.photoHeight || 1200} loading="lazy" decoding="async" /></a>}</article>}
+          <figure class="home-group"><h3>The Team</h3><a href={pageUrl('team')} aria-label="Meet the Tilley Research Group"><img src={asset('media/group-2025-display.webp')} alt="Tilley Research Group together outdoors in 2025" width="1600" height="1066" loading="lazy" decoding="async" /></a></figure>
+        </div>
+      </div></section>}
+      {page === 'team' && <>      <section class="content team" id="team"><div class="wrap">
+        <h1 class="sr-only">{team.title}</h1><TeamBody />
+        {await Promise.all(roles.map(async ([role, label]) => {
+          const members = people.filter(p => p.data.role === role && p.data.status === 'current');
+          if (!members.length) return null;
+          return <div class={role === 'group-leader' ? 'member-group leader-group' : 'member-group'}><h3>{label}</h3><div class="portrait-grid">
+            {await Promise.all(members.map(async person => {
+              return <article class="member" data-person={person.id}>
+                {person.data.photo && <a class="member-photo" href={pageUrl(`team/${person.id}`)} aria-label={`View ${person.data.name}’s profile`}><img src={asset(person.data.thumbnail || person.data.photo)} alt={person.data.name} width={person.data.thumbnailWidth || person.data.photoWidth || 320} height={person.data.thumbnailHeight || person.data.photoHeight || 400} loading="lazy" decoding="async" /></a>}
+                <h4><a href={pageUrl(`team/${person.id}`)}>{person.data.name}</a></h4>{person.data.roleLabel && <p class="member-role">{person.data.roleLabel}</p>}
+                {person.data.email && <a class="contact-link" href={`mailto:${person.data.email}`}>Email</a>}
+              </article>;
+            }))}
+          </div></div>;
+        }))}
+          <section class="group-history" aria-labelledby="group-history-title">
+            <h3 id="group-history-title">Group photos</h3>
+            {[
+              {year: 2025, width: 1600, height: 1066},
+              {year: 2024, width: 1800, height: 779},
+              {year: 2022, width: 1800, height: 1200},
+            ].map(photo => <figure>
+              <figcaption>{photo.year}</figcaption>
+              <img src={asset(`media/group-${photo.year}-display.webp`)} alt={`Tilley Research Group in ${photo.year}`} width={photo.width} height={photo.height} loading="lazy" decoding="async" />
+            </figure>)}
+          </section>
+        {alumni.length > 0 && <details><summary>Alumni</summary>
+          <div class="alumni-columns">{roles.map(([role, label]) => {
+            const members = alumni.filter(p => p.data.role === role);
+            return members.length > 0 && <div class="alumni-group"><h4>{label}</h4><ul class="alumni-list">
+              {members.map(person => <li data-person={person.id}>{person.data.name}{person.data.thesis && <> <a class="contact-link" href={person.data.thesis}>Thesis ↗</a></>}</li>)}
+            </ul></div>;
+          })}</div>
+        </details>}
+      </div></section></>}
+      {(page === 'publications' || page === 'home') && <>      <section class="content" id="publications"><div class="wrap">
+        <div class="section-head"><SectionHeading>{page === 'home' ? 'Latest publications' : papers.title}</SectionHeading><div><PapersBody /></div></div>
+        {page === 'publications' && <>
+          <form class="publication-filters" role="search" aria-label="Search publications" hidden>
+            <div class="publication-search"><label for="publication-query">Search publications</label><input id="publication-query" type="search" placeholder="Title, keyword, author, or year" autocomplete="off" /></div>
+            <div><label for="publication-year">Year</label><select id="publication-year"><option value="">All years</option>{[...new Set(publications.map(entry => entry.data.year))].sort((a,b) => b-a).map(year => <option value={year}>{year}</option>)}</select></div>
+            <button type="reset">Clear filters</button>
+            <p class="publication-count" role="status" aria-live="polite" aria-atomic="true"></p>
+          </form>
+          <p class="publication-empty" hidden>No publications match your search. Try another keyword or year.</p>
+        </>}
+        <div class="papers">{await Promise.all((page === 'home' ? publications.slice(0, 3) : publications).map(async entry => {
+          const { Content } = entry.collection === 'publications-auto' ? { Content: null } : await render(entry);
+          return <article class="paper"><time>{entry.data.year}</time><h3>{entry.data.title}</h3>
+            {entry.data.authors && <p class="paper-authors">{entry.data.authors}</p>}<p>{entry.data.journal}</p><a href={entry.data.doi}>{entry.data.doi.replace('https://', '')} ↗</a>
+            {entry.body?.trim() && <div class="publication-note"><Content /></div>}
+          </article>;
+        }))}</div>
+        {page === 'home' && <a class="summary-link" href={pageUrl('publications')}>All publications →</a>}
+      </div></section></>}
+      {page === 'opportunities' && <>      <section class="content opportunities" id="opportunities"><div class="wrap">
+        <div class="section-head section-head-stacked"><h1>{opportunities.title}</h1><div><OpportunitiesBody />
+          {opportunities.linkUrl && <a href={opportunities.linkUrl}>{opportunities.linkLabel || 'More information'}</a>}
+        </div></div>
+      </div></section></>}
+      {page === 'contact' && <section class="content"><div class="wrap"><div class="section-head section-head-stacked"><h1>Contact</h1><div><h3>{contact.title}</h3><ContactBody />{contact.email && <p><a class="contact-link" href={`mailto:${contact.email}`}>{contact.email}</a></p>}<p>{contact.phone}</p></div></div></div></section>}
+      {page === 'home' && <>
+        <section class="content" id="highlights"><div class="wrap"><div class="section-head"><h2>Highlights</h2></div><div class="news-highlights">{news.slice(0,3).map(entry => <article><div class="news-meta"><time datetime={entry.data.date}>{formatDate(entry.data.date)}</time>{entry.data.sample && <span>Sample news</span>}</div><h4><a href={pageUrl('news')}>{entry.data.title}</a></h4><p>{entry.data.summary}</p></article>)}</div><a class="summary-link" href={pageUrl('news')}>All news →</a></div></section>
+
+      </>}
+      {page === 'news' && <section class="content"><div class="wrap"><div class="section-head"><h1>{newsSection.title}</h1><div><NewsBody /></div></div><div class="news-feed">{await Promise.all(news.map(async entry => {const { Content } = await render(entry); return <article><div class="news-meta"><time datetime={entry.data.date}>{formatDate(entry.data.date)}</time>{entry.data.sample && <span>Sample news</span>}</div><h2>{entry.data.title}</h2><p>{entry.data.summary}</p><Content /></article>;}))}{news.length === 0 && <p>No news yet.</p>}</div></div></section>}
+
+      {page === 'person' && profile && ProfileContent && <section class="content member-profile"><div class="wrap">
+        <a class="profile-back contact-link" href={pageUrl('team')}>← Back to the team</a>
+        <div class={profile.data.photo ? 'profile-layout' : 'profile-layout profile-no-photo'}>
+          {profile.data.photo && <img class="profile-portrait" src={asset(profile.data.photo)} alt={profile.data.name} width={profile.data.photoWidth || 320} height={profile.data.photoHeight || 400} decoding="async" />}
+          <div class="profile-info"><h1>{profile.data.name}</h1><p class="profile-role">{profile.data.roleLabel || roles.find(([role]) => role === profile.data.role)?.[1]}</p><div class="profile-biography"><ProfileContent /></div>
+          {profile.data.thesis && <p><a class="contact-link" href={profile.data.thesis}>Thesis ↗</a></p>}
+          {profile.data.email && <p><a class="contact-link" href={`mailto:${profile.data.email}`}>{profile.data.email}</a></p>}</div>
+        </div>
+      </div></section>}
+    </main>
+
+    <footer><div class="wrap"><div class="footer"><div class="footer-identity"><a class="brand" href={pageUrl('home')}>{contact.title}</a><p class="footer-address">University of Zurich<br />Winterthurerstrasse 190 · 8057 Zurich, Switzerland</p></div><nav class="footer-links" aria-label="Footer navigation"><a class="contact-link" href={pageUrl('opportunities')}>Opportunities</a><a class="contact-link" href={pageUrl('contact')}>Contact</a><a class="contact-link" href="#top">Back to top ↑</a></nav></div>{contact.note && <div class="note">{contact.note}</div>}</div></footer>
+    <script is:inline set:html={navigationScript}></script>
+  </body>
+</html>

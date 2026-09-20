@@ -1,0 +1,600 @@
+# HANDOFF — David's Website
+
+**Last updated:** 2026-09-18  
+**Target domain:** `tilleyresearchgroup.com`
+
+## 1. Project objective
+
+Replace the current Tilley Research Group website with a static website that is easy to maintain and eventually host on GitHub Pages while retaining the existing custom domain.
+
+The most important requirement is long-term maintainability: future group members should update people, alumni, research, news, publications, positions, etc. by editing simple Markdown files, without editing HTML/CSS or understanding the site implementation.
+
+**First instruction for the next Codex agent:** inspect the actual project/repository before changing anything. Do not assume previously proposed paths were actually implemented.
+
+## 2. Design philosophy
+
+The intended model is:
+
+- one person = one Markdown file;
+- one news item = one Markdown file;
+- one research topic = one Markdown file;
+- one position = one Markdown file;
+- metadata/frontmatter controls where an item appears;
+- templates generate the actual pages/cards.
+
+For example:
+
+```md
+---
+name: Jane Doe
+position: postdoc
+photo: /images/people/jane-doe.jpg
+email: jane.doe@example.com
+order: 20
+---
+
+Jane works on ...
+```
+
+Changing:
+
+```yaml
+position: postdoc
+```
+
+to:
+
+```yaml
+position: alumni
+```
+
+should automatically move that person from the current-members section to Alumni after the site rebuilds. No HTML list should need manual editing.
+
+## 3. Why a static-site generator was discussed
+
+Plain HTML was considered, but manually maintaining separate HTML pages/cards would undermine the desired Markdown-driven handover.
+
+Astro and Jekyll were therefore discussed.
+
+A generator is a **build tool**, not a separate public hosting service:
+
+```text
+Markdown + templates + CSS + images
+                |
+                v
+          Astro/Jekyll
+                |
+                v
+        HTML + CSS + JS
+                |
+                v
+          GitHub Pages
+                |
+                v
+        visitor's browser
+```
+
+Visitors receive generated static files. Astro/Jekyll do not need to run in the visitor's browser.
+
+## 4. Astro discussion
+
+Astro was considered because it offers clean content organization, Markdown/content collections, reusable components, and static output.
+
+A conceptual structure previously proposed was:
+
+```text
+content/
+  people/
+  research/
+  news/
+  publications/
+  positions/
+
+public/
+  images/
+
+src/
+  ...
+```
+
+This was a proposal, **not a verified description of the current project**.
+
+## 5. Jekyll discussion
+
+Jekyll was also considered because it is Markdown-oriented and historically integrates simply with GitHub Pages.
+
+A conceptual prototype structure proposed earlier was:
+
+```text
+_people/
+  person-1.md
+  person-2.md
+
+_layouts/
+  ...
+
+assets/
+  ...
+
+_config.yml
+index.html
+people.html
+```
+
+Jekyll would generate `_site/`.
+
+Again, this was a proposed architecture, not confirmation that these files currently exist.
+
+## 6. Framework decision
+
+Do not migrate between Astro/Jekyll merely for architectural purity.
+
+The success criterion is:
+
+> Can a future group member safely maintain the website by editing obvious Markdown files?
+
+If the current offline implementation already uses a workable architecture, continue with it unless there is a concrete reason to change it.
+
+## 7. Hosting and custom domain
+
+The intended final architecture is:
+
+```text
+Git repository
+      |
+      v
+static-site build
+      |
+      v
+GitHub Pages
+      |
+      v
+tilleyresearchgroup.com
+```
+
+The current custom domain should be retained.
+
+Before migration, identify:
+
+1. domain registrar;
+2. DNS provider;
+3. current DNS records;
+4. current hosting destination;
+5. who has credentials/authority to modify DNS.
+
+Do not change DNS during development.
+
+Safe migration sequence:
+
+```text
+build new site
+      ↓
+test offline
+      ↓
+test on temporary GitHub Pages URL
+      ↓
+compare against current site
+      ↓
+verify links/assets/mobile layout
+      ↓
+configure custom domain
+      ↓
+change DNS
+      ↓
+verify HTTPS/domain
+      ↓
+only then retire old hosting
+```
+
+The existing public site should remain online until the replacement is validated.
+
+## 8. Important user constraint: no local installation
+
+The user explicitly does not want to install a local web-development stack just to prototype or maintain this website.
+
+Do not simply instruct the user to install Node, Astro, Ruby, Jekyll, etc. on their computer.
+
+Development/building should preferably be handled by Codex/cloud tooling and eventually by GitHub automation. A local setup can be documented as optional, but should not be necessary for normal maintenance.
+
+## 9. Current prototype state
+
+By 2026-09-16, the user reported that the body of the HTML had been built for an **offline version**.
+
+The next desired test was to change information in a `.md` file and observe the resulting website change.
+
+Therefore an offline HTML prototype exists/existed, and the immediate development task is to establish how that HTML is connected to editable source content.
+
+Do not rebuild from scratch before inspecting what is already present.
+
+## 10. Current unresolved issue: where are the Markdown files?
+
+The user asked where the `.md` files to edit are located.
+
+A screenshot was provided, and the user reported:
+
+> `sources` is empty
+
+The user then asked for the folder/project to be inspected directly.
+
+This is the most important unresolved issue at handoff.
+
+The next agent should search the actual project for:
+
+```text
+*.md
+*.mdx
+*.markdown
+```
+
+and inspect directories such as:
+
+```text
+src/
+content/
+sources/
+data/
+_people/
+people/
+pages/
+public/
+_site/
+dist/
+build/
+```
+
+Also inspect framework/configuration indicators:
+
+```text
+package.json
+astro.config.*
+_config.yml
+Gemfile
+.github/workflows/
+CNAME
+```
+
+Determine whether:
+
+1. Markdown files exist elsewhere;
+2. content is hard-coded in HTML;
+3. content is stored in JS/JSON;
+4. only generated output exists;
+5. source files are in another workspace;
+6. the Markdown content layer was never implemented.
+
+Do not guess.
+
+## 11. Best diagnostic procedure
+
+After listing the repository tree, choose a distinctive piece of visible content from the offline website, such as a person's name or a paragraph, and search the whole project for that exact string.
+
+This quickly reveals whether the content originates in:
+
+- Markdown;
+- HTML;
+- JSON/data;
+- JavaScript;
+- a template;
+- generated output only.
+
+Then trace the path from source content to generated HTML.
+
+## 12. Source files vs generated files
+
+The repository must make this distinction obvious.
+
+An Astro-style example:
+
+```text
+src/content/people/alice.md       <- EDIT THIS
+src/pages/...                     <- template/code
+
+dist/people/index.html            <- GENERATED; DO NOT EDIT
+```
+
+A Jekyll-style example:
+
+```text
+_people/alice.md                  <- EDIT THIS
+people.html                       <- template
+
+_site/people/index.html           <- GENERATED; DO NOT EDIT
+```
+
+These are examples only. Use the actual paths discovered in the repository.
+
+Generated HTML may be inspected for debugging, but should not become the normal content-editing interface.
+
+## 13. Recommended content/presentation separation
+
+Frequently edited content:
+
+```text
+people
+research
+news
+publications
+positions
+contact information
+images
+```
+
+Rarely edited implementation:
+
+```text
+layouts
+components
+CSS
+navigation logic
+build configuration
+deployment configuration
+```
+
+The intended maintenance workflow is:
+
+```text
+open Markdown file
+        ↓
+change text/metadata
+        ↓
+save/commit
+        ↓
+automatic build
+        ↓
+website updates
+```
+
+## 14. Suggested frontmatter convention
+
+If the existing implementation has no schema, use a consistent one. Example:
+
+```md
+---
+name: "Jane Doe"
+slug: "jane-doe"
+position: "postdoc"
+title: "Postdoctoral Researcher"
+photo: "/images/people/jane-doe.jpg"
+email: "jane.doe@example.com"
+order: 20
+active: true
+---
+
+Research description here.
+```
+
+Possible normalized role values:
+
+```text
+pi
+postdoc
+phd
+master
+visitor
+staff
+alumni
+```
+
+Templates should map these values to sections rather than requiring section information to be duplicated in HTML.
+
+## 15. Images
+
+Keep images separate from Markdown and reference them by stable paths.
+
+Conceptually:
+
+```text
+public/images/people/
+public/images/research/
+public/images/news/
+```
+
+Use whatever equivalent path the actual framework expects.
+
+Prefer descriptive filenames such as:
+
+```text
+jane-doe.jpg
+group-photo-2026.jpg
+```
+
+## 16. URLs
+
+Preserve important existing public routes where practical, especially routes already indexed or externally linked.
+
+Before launch:
+
+1. inventory important URLs on the current site;
+2. compare them with new routes;
+3. preserve paths where practical;
+4. create redirects where the hosting setup supports them;
+5. verify navigation and discoverability.
+
+Do not casually rename public routes immediately before migration.
+
+## 17. Required workflow for the next Codex agent
+
+### Step 1 — Inspect
+
+List the complete project tree and identify the framework, source directories, generated directories, content files, images, CSS, scripts, and deployment files.
+
+### Step 2 — Trace existing content
+
+Search for a distinctive visible string from the offline page and identify its true source.
+
+### Step 3 — Report concrete paths
+
+After inspection, tell the user exactly something like:
+
+```text
+Edit:
+<actual Markdown path>
+
+Generated output:
+<actual output path>
+
+Build command/process:
+<actual command/process>
+
+Preview:
+<actual method>
+```
+
+Do not keep giving hypothetical paths once repository access is available.
+
+### Step 4 — Test Markdown → website
+
+Modify a harmless visible field in one Markdown entry, for example append `TEST` to a person's displayed name.
+
+Rebuild.
+
+Verify that the generated HTML changes.
+
+Revert the test.
+
+This establishes that the content pipeline really works.
+
+### Step 5 — Document maintenance
+
+Add/update repository documentation describing exactly:
+
+- where people files live;
+- how to add a person;
+- how to move a person to Alumni;
+- where photos go;
+- how to add news/research/etc.;
+- how preview works;
+- how deployment works.
+
+## 18. Maintenance acceptance test
+
+A useful end-to-end test is:
+
+```text
+1. create test-person.md
+2. build
+3. verify the person appears
+4. change position to alumni
+5. build
+6. verify the person moves to Alumni
+7. delete the test file
+8. build
+9. verify the person disappears
+```
+
+If this requires manually editing HTML, the architecture does not yet satisfy the core requirement.
+
+## 19. Deployment automation
+
+The eventual desired workflow is:
+
+```text
+edit Markdown
+     ↓
+commit/push
+     ↓
+GitHub
+     ↓
+automatic build
+     ↓
+GitHub Pages
+     ↓
+live website
+```
+
+Depending on the framework, this may be native Jekyll/GitHub Pages behavior or a GitHub Actions workflow that builds and deploys Astro/static output.
+
+Inspect the existing project before selecting or rewriting the deployment configuration.
+
+## 20. Pre-deployment testing checklist
+
+Test at minimum:
+
+- home page;
+- people page;
+- automatic current-member/alumni grouping;
+- individual member pages if present;
+- research;
+- publications;
+- news;
+- positions;
+- navigation;
+- footer;
+- contact/email links;
+- external links;
+- images and missing-image behavior;
+- mobile layout;
+- tablet layout;
+- desktop layout;
+- page titles/metadata;
+- favicon;
+- 404 behavior;
+- HTTPS;
+- custom domain.
+
+Also test the content-maintenance workflow itself.
+
+## 21. What not to do
+
+- **Do not invent repository paths.** `sources/` was reported empty.
+- **Do not make generated HTML the normal editing workflow.**
+- **Do not require local software installation.**
+- **Do not alter live DNS before validation.**
+- **Do not over-engineer the project with a backend/database unless a real requirement appears.**
+- **Do not make ordinary maintainers edit templates to add/remove/move people.**
+- **Do not throw away the existing offline implementation before inspecting it.**
+
+## 22. Desired maintainer README
+
+The final repository should contain a short guide understandable by someone who knows basic Markdown but not web development.
+
+Example structure:
+
+```text
+HOW TO ADD A NEW PERSON
+1. Duplicate an existing file in <actual people folder>.
+2. Rename it using the person's name.
+3. Edit the frontmatter and biography.
+4. Add their photo to <actual image folder>.
+5. Commit the changes.
+
+HOW TO MOVE SOMEONE TO ALUMNI
+1. Open their Markdown file.
+2. Change:
+   position: postdoc
+   to:
+   position: alumni
+3. Commit.
+```
+
+Fill in real paths only after repository inspection.
+
+## 23. State at handoff
+
+As of 2026-09-18:
+
+1. The objective and long-term maintenance philosophy are established.
+2. GitHub Pages is the intended hosting direction.
+3. `tilleyresearchgroup.com` should eventually remain the public domain.
+4. Astro and Jekyll were both evaluated; neither framework name is itself the goal.
+5. An offline HTML version has been built.
+6. The user wants to test Markdown-driven updates.
+7. The expected `sources` directory was found empty.
+8. The actual location/existence of the Markdown source files remains unresolved.
+9. The immediate next task is therefore **repository inspection and source tracing**, not redesign.
+
+## 24. Priority instruction to the receiving Codex project
+
+Start with the files that actually exist.
+
+Do not answer the user's next question with a generic Astro/Jekyll tutorial. Inspect the project, identify the real content source, establish the build chain, and make the smallest changes necessary to achieve:
+
+```text
+simple Markdown edit
+        ↓
+automatic static build
+        ↓
+correct updated website
+```
+
+That is the core of the project.

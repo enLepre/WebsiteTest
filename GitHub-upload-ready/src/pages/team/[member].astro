@@ -1,0 +1,10 @@
+---
+import { getCollection } from 'astro:content';
+import SitePage from '../../components/SitePage.astro';
+export async function getStaticPaths() {
+  const members = await getCollection('people', ({ data }) => !data.draft && data.status === 'current');
+  return members.map(person => ({ params: { member: person.id }, props: { person } }));
+}
+const { person } = Astro.props;
+---
+<SitePage page="person" person={person} />
