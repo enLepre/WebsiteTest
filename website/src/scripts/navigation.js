@@ -58,6 +58,7 @@
   }
 
   function initializePage() {
+    initializeExternalLinks();
     initializePublicationFilters();
     cleanupVideo();
     const video = document.querySelector('main video');

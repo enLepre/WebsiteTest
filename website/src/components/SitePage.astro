@@ -6,10 +6,13 @@ import '../styles/site.css';
 import '../styles/lab-tour.css';
 import '../styles/hero-video.css';
 import navigationScript from '../scripts/navigation.js?raw';
+import externalLinksScript from '../scripts/external-links.js?raw';
 import heroVideoScript from '../scripts/hero-video.mjs?raw';
 import publicationSync from '../data/publication-sync.json';
 import importedPublications from '../data/publications-auto.json';
 import { mergePublications } from '../lib/publications.mjs';
+import { externalLinkAttributes } from '../lib/external-links.mjs';
+const externalLink = (href: string) => externalLinkAttributes(href, Astro.site);
 const { page = 'home', person: profile } = Astro.props;
 const ProfileContent = profile ? (await render(profile)).Content : null;
 const pageUrl = (id: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/${id === 'home' ? '' : id + '/'}`;
@@ -128,7 +131,7 @@ const alumni = people.filter(p => p.data.status === 'alumni');
           <div class="alumni-columns">{roles.map(([role, label]) => {
             const members = alumni.filter(p => p.data.role === role);
             return members.length > 0 && <div class="alumni-group"><h4>{label}</h4><ul class="alumni-list">
-              {members.map(person => <li data-person={person.id}>{person.data.name}{person.data.thesis && <> <a class="contact-link" href={person.data.thesis}>Thesis ↗</a></>}</li>)}
+              {members.map(person => <li data-person={person.id}>{person.data.name}{person.data.thesis && <> <a class="contact-link" href={person.data.thesis} {...externalLink(person.data.thesis)}>Thesis ↗</a></>}</li>)}
             </ul></div>;
           })}</div>
         </details>}
@@ -147,7 +150,7 @@ const alumni = people.filter(p => p.data.status === 'alumni');
         <div class="papers">{await Promise.all((page === 'home' ? publications.slice(0, 3) : publications).map(async entry => {
           const { Content } = entry.collection === 'publications-auto' ? { Content: null } : await render(entry);
           return <article class="paper"><time>{entry.data.year}</time><h3>{entry.data.title}</h3>
-            {entry.data.authors && <p class="paper-authors">{entry.data.authors}</p>}<p>{entry.data.journal}</p><a href={entry.data.doi}>{entry.data.doi.replace('https://', '')} ↗</a>
+            {entry.data.authors && <p class="paper-authors">{entry.data.authors}</p>}<p>{entry.data.journal}</p><a href={entry.data.doi} {...externalLink(entry.data.doi)}>{entry.data.doi.replace('https://', '')} ↗</a>
             {entry.body?.trim() && <div class="publication-note"><Content /></div>}
           </article>;
         }))}</div>
@@ -172,7 +175,7 @@ const alumni = people.filter(p => p.data.status === 'alumni');
       </div></section>}
       {page === 'opportunities' && <>      <section class="content opportunities" id="opportunities"><div class="wrap">
         <div class="section-head section-head-stacked"><h1>{opportunities.title}</h1><div><OpportunitiesBody />
-          {opportunities.linkUrl && <a href={opportunities.linkUrl}>{opportunities.linkLabel || 'More information'}</a>}
+          {opportunities.linkUrl && <a href={opportunities.linkUrl} {...externalLink(opportunities.linkUrl)}>{opportunities.linkLabel || 'More information'}</a>}
         </div></div>
       </div></section></>}
       {page === 'contact' && <section class="content"><div class="wrap"><div class="section-head section-head-stacked"><h1>Contact</h1><div><h3>{contact.title}</h3><ContactBody />{contact.email && <p><a class="contact-link" href={`mailto:${contact.email}`}>{contact.email}</a></p>}<p>{contact.phone}</p></div></div></div></section>}
@@ -187,13 +190,14 @@ const alumni = people.filter(p => p.data.status === 'alumni');
         <div class={profile.data.photo ? 'profile-layout' : 'profile-layout profile-no-photo'}>
           {profile.data.photo && <img class="profile-portrait" src={asset(profile.data.photo)} alt={profile.data.name} width={profile.data.photoWidth || 320} height={profile.data.photoHeight || 400} decoding="async" />}
           <div class="profile-info"><h1>{profile.data.name}</h1><p class="profile-role">{profile.data.roleLabel || roles.find(([role]) => role === profile.data.role)?.[1]}</p><div class="profile-biography"><ProfileContent /></div>
-          {profile.data.thesis && <p><a class="contact-link" href={profile.data.thesis}>Thesis ↗</a></p>}
+          {profile.data.thesis && <p><a class="contact-link" href={profile.data.thesis} {...externalLink(profile.data.thesis)}>Thesis ↗</a></p>}
           {profile.data.email && <p><a class="contact-link" href={`mailto:${profile.data.email}`}>{profile.data.email}</a></p>}</div>
         </div>
       </div></section>}
     </main>
 
     <footer><div class="wrap"><div class="footer"><div class="footer-identity"><a class="brand" href={pageUrl('home')}>{contact.title}</a><p class="footer-address">University of Zurich<br />Winterthurerstrasse 190 · 8057 Zurich, Switzerland</p></div><nav class="footer-links" aria-label="Footer navigation"><a class="contact-link" href={pageUrl('opportunities')}>Opportunities</a><a class="contact-link" href={pageUrl('contact')}>Contact</a><a class="contact-link" href="#top">Back to top ↑</a></nav></div>{contact.note && <div class="note">{contact.note}</div>}</div></footer>
+    <script is:inline set:html={externalLinksScript}></script>
     <script is:inline set:html={heroVideoScript.replace('export function', 'function') + '\n' + navigationScript}></script>
   </body>
 </html>
