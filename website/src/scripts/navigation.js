@@ -158,9 +158,8 @@
           : { path: current, scrollY: window.scrollY };
         const destination = await loadPage(url.pathname);
         const footerLink = (path) => [...document.querySelectorAll('footer [data-footer-link]')].find(link => new URL(link.href).pathname === path);
-        const source = reverseFooter ? document.querySelector('[data-footer-title]') : footerLink(url.pathname);
-        await runFooterZoom({
-          source, reverse: reverseFooter, reducedMotion,
+        await runFooterScroll({
+          reverse: reverseFooter, reducedMotion,
           update: () => {
             cleanupVideo();
             document.querySelector('main').replaceWith(destination.main.cloneNode(true));
@@ -174,12 +173,11 @@
             });
             if (!historyChange) history.pushState({ footerReturn }, '', url);
             window.scrollTo({ top: reverseFooter ? (origin?.scrollY || destination.scrollY || 0) : 0, behavior: 'instant' });
-            // Direct visits have no saved source. Land on the footer for the reverse zoom.
+            // Direct visits have no saved source. Land on the footer for the reverse scroll.
             if (reverseFooter && !origin) footerLink(departure)?.scrollIntoView({ block: 'center', behavior: 'instant' });
             initializePage();
             document.querySelector('main').focus({ preventScroll: true });
           },
-          target: () => reverseFooter ? footerLink(departure) : document.querySelector('[data-footer-title]'),
         });
         return;
       }

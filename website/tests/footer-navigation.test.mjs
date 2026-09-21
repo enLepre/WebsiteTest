@@ -54,10 +54,10 @@ test('footer links, Back, browser Back/Forward, and nested footer visits restore
       const heading = { textContent: path === contacts ? 'Contacts' : 'Opportunities', style: {} };
       return { title: heading.textContent, querySelector: selector => selector === 'footer' ? footer() : main(heading) };
     } },
-    runFooterZoom: async options => {
-      const source = options.source?.textContent;
+    runFooterScroll: async options => {
+
       options.update();
-      transitions.push({ reverse: options.reverse, source, target: options.target()?.textContent });
+      transitions.push({ reverse: options.reverse });
     },
   });
   const settle = () => new Promise(resolve => setImmediate(resolve));
@@ -67,12 +67,12 @@ test('footer links, Back, browser Back/Forward, and nested footer visits restore
   await click(footerLink(contacts));
   assert.equal(location.pathname, contacts);
   assert.equal(document.back.href, base + home);
-  assert.deepEqual(transitions.at(-1), { reverse: false, source: 'Contacts', target: 'Contacts' });
+  assert.deepEqual(transitions.at(-1), { reverse: false });
   assert.equal(window.scrollY, 0);
   await click(document.back);
   assert.equal(location.pathname, home);
   assert.equal(window.scrollY, 720);
-  assert.deepEqual(transitions.at(-1), { reverse: true, source: 'Contacts', target: 'Contacts' });
+  assert.deepEqual(transitions.at(-1), { reverse: true });
   history.forward(); await settle();
   assert.equal(location.pathname, contacts);
   assert.equal(transitions.at(-1).reverse, false);
@@ -83,7 +83,7 @@ test('footer links, Back, browser Back/Forward, and nested footer visits restore
   history.back(); await settle();
   assert.equal(location.pathname, contacts);
   assert.equal(window.scrollY, 120);
-  assert.deepEqual(transitions.at(-1), { reverse: true, source: 'Opportunities', target: 'Opportunities' });
+  assert.deepEqual(transitions.at(-1), { reverse: true });
   await click(document.back);
   assert.equal(location.pathname, home);
   assert.equal(window.scrollY, 720);
