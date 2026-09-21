@@ -1,5 +1,5 @@
 ---
-name: "David Tilley"
+name: "Prof. David Tilley"
 role: "group-leader"
 status: "current"
 photo: "people/david-tilley-profile.webp"
