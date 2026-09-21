@@ -53,7 +53,7 @@ export const collections = {
     loader: glob({ pattern: '*.md', base: './content/sections' }),
     schema: z.object({
       title: z.string().min(1), eyebrow: z.string().optional(), subtitle: z.string().optional(),
-      video: localAsset.optional(), email: z.string().email().optional(),
+      video: localAsset.optional(), videoMp4: localAsset.optional(), poster: localAsset.optional(), email: z.string().email().optional(),
       phone: z.string().optional(), note: z.string().optional(), linkLabel: z.string().optional(),
       linkUrl: z.string().refine(value => /^(https:\/\/|mailto:)/.test(value), 'Use an HTTPS or email link').optional(),
     }),

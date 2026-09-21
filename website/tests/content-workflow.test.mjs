@@ -44,6 +44,9 @@ test('Markdown updates drive the real static build', async t => {
       assert.match(html, /src="\/test-repository\/people\/test\.png"/);
       const home = await readFile(join(fixture, 'dist/index.html'), 'utf8');
       assert.match(home, /src="\/test-repository\/media\//);
+      assert.match(home, /poster="\/test-repository\/media\/lab-poster.jpg"/);
+      assert.match(home, /src="\/test-repository\/media\/lab-light-on.mp4" type="video\/mp4"/);
+      assert.match(home, /class="video-play"/);
       assert.doesNotMatch(html, /<video/);
       assert.match(home, /src="\/test-repository\/media\/group-2025-display\.webp"/);
       assert.doesNotMatch(home, /src="[^"]*people\/test\.png"/);

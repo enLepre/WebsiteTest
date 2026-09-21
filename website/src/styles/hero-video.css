@@ -1,0 +1,7 @@
+.hero .video-play {
+  position: absolute; right: 24px; bottom: 24px; z-index: 3;
+  min-height: 44px; padding: 10px 18px; border: 1px solid #ffffffb3;
+  border-radius: 5px; background: #17202dcc; color: white; font-size: 14px;
+}
+.hero .video-play[hidden] { display: none; }
+.hero .video-play:hover { background: #17202d; }

@@ -23,7 +23,7 @@ for (const page of pages) {
     const url = `${homeHref}${target.route ? target.route + '/' : ''}`;
     html = html.split(`href="${url}"`).join(`href="${target.output}"`);
   }
-  for (const source of new Set([...html.matchAll(/src="([^"]+)"/g)].map(m => m[1]))) {
+  for (const source of new Set([...html.matchAll(/(?:src|poster)="([^"]+)"/g)].map(m => m[1]))) {
     const match = source.match(/(?:^|\/)((?:people|media)\/[a-zA-Z0-9_.\/-]+)$/);
     if (!match) continue;
     const assetPath = match[1];
@@ -36,6 +36,7 @@ for (const page of pages) {
       cache.set(assetPath, `data:${mime};base64,${bytes.toString('base64')}`);
     }
     html = html.split(`src="${source}"`).join(`src="${cache.get(assetPath)}"`);
+    html = html.split(`poster="${source}"`).join(`poster="${cache.get(assetPath)}"`);
   }
   await writeFile(resolve('offline', page.output), html);
   if (!page.route) {

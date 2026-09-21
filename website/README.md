@@ -142,6 +142,10 @@ The offline export includes the personal pages as team-NAME.html. Share the enti
 
 ## Horizontal navigation
 
+### Homepage video on phones
+
+The homepage uses a muted, inline MP4 source with WebM as a fallback. `content/sections/hero.md` controls `videoMp4`, `video`, and `poster`; keep all three in sync when replacing the clip. Use H.264 MP4 with web-optimized (fast-start) metadata and no audio. The cover image remains visible until a frame is available. Playback starts on the initial visit and retries when media becomes ready or the page becomes visible again. A Play video button is available if autoplay is blocked. Reduced-motion preferences suppress autoplay but still allow explicit playback. Offscreen and background videos pause. Offline exports embed both video formats and the cover image.
+
 The main menu moves left or right in menu order, passing through intermediate pages. Transitions take 440–1050 ms, depending on the distance. The script in `src/scripts/navigation.js` fetches only the pages on the selected journey and caches them for the current visit; it does not preload the entire website. Browser Back/Forward also animates. Rapid menu selections retain the latest requested destination. Reduced-motion preferences skip the animation and intermediate fetches.
 
 Member portraits in the Team directory zoom into their position on the personal page, with the biography fading in. Returning to Team reverses the portrait motion: the personal information fades out as the image shrinks back into the directory, restoring the saved scroll position. Direct profile visits reveal the matching member when returning. Browser Back/Forward supports these routes too. JavaScript-disabled browsers, failed page fetches, and double-clicked `file://` offline previews retain normal page navigation. To see the animation locally, run the website preview over HTTP (`pnpm dev` or `pnpm preview` after building).

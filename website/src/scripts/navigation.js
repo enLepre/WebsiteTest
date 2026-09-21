@@ -62,24 +62,7 @@
     cleanupVideo();
     const video = document.querySelector('main video');
     if (!video) return;
-    let visible = false;
-    const sync = () => {
-      if (visible && !document.hidden && !reducedMotion.matches) video.play().catch(() => {});
-      else video.pause();
-    };
-    const observer = new IntersectionObserver(entries => {
-      visible = entries[0].isIntersecting;
-      sync();
-    });
-    observer.observe(video);
-    document.addEventListener('visibilitychange', sync);
-    reducedMotion.addEventListener('change', sync);
-    cleanupVideo = () => {
-      observer.disconnect();
-      video.pause();
-      document.removeEventListener('visibilitychange', sync);
-      reducedMotion.removeEventListener('change', sync);
-    };
+    cleanupVideo = initializeHeroVideo(video, document.querySelector('main .video-play'), reducedMotion);
   }
 
   function rememberPage() {
