@@ -1,7 +1,7 @@
 ---
 name: "Florian Spirig"
 role: "msc"
-status: "current"
+status: "alumni"
 photo: "people/florian-spirig-profile.webp"
 order: 16
 draft: false
