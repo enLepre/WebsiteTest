@@ -1,6 +1,14 @@
 # Tilley Research Group website — current project status
 
-Checked: 2026-09-21, approximately 16:13 Europe/Zurich (CEST).
+Deployment checked: 2026-09-21, approximately 16:13 Europe/Zurich (CEST). Local development updated later the same day.
+
+## Lab Tour addition — local, awaiting publication
+
+Added `website/content/equipment/` with 30 editable Markdown entries (18 synthetic and 12 analytical), using all supplied photos from `media/Equipment/`. Website copies are in `website/public/media/equipment/`. The new `/lab-tour/` route appears in the shared navigation, uses a responsive photo grid, and includes the four shared-facility links from the original lab tour. Page introduction and facility links are editable in `website/content/sections/`. An equipment template and maintainer instructions are included.
+
+Built successfully with the real `/WebsiteTest` deployment prefix; all 12 automated tests passed. The offline export contains 24 pages, including `website/offline/lab-tour.html`. Static checks verified all 30 instrument cards, their image paths, embedded offline photos, and internal offline page links. Browser visual verification was blocked by an admin-enforced browser policy, so desktop/mobile appearance has not been visually confirmed.
+
+The local checkout was already at `6611fada7eee181d199b4d4ec70bf9a13211c341` (merge of `main`) with a clean working tree when this work began, superseding the older local-checkout snapshot below. This addition has not been committed, pushed, or deployed; deployment observations below are the earlier snapshot.
 
 ## Overall status
 

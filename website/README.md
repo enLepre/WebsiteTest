@@ -4,6 +4,12 @@ The approved design with six separate pages, powered by Astro and Markdown. The 
 
 ## Everyday editing
 
+### Lab Tour
+
+The Lab Tour page at `lab-tour/` lists 30 instruments in Synthetic Equipment and Analytical Devices, followed by Shared Facilities. Edit one Markdown file per instrument in `content/equipment/`; copy `templates/equipment.md` to add another. Set `category` to `synthetic` or `analytical`, use `order` to arrange entries, and set `draft: true` to hide an entry. Optional body text appears below the instrument name.
+
+Published photos live in `public/media/equipment/`. The original supplied files remain in the repository's `media/Equipment/` folder. Upload new website photos into `public/media/equipment/` with filenames without spaces, then set the Markdown `image` field to `media/equipment/filename.webp` and provide descriptive `imageAlt` text. Missing photos stop the build. Edit `content/sections/lab-tour.md` for the introduction and `content/sections/shared-facilities.md` for facility links. The offline exporter includes this page automatically.
+
 For copy-and-paste templates covering every content folder and each fixed section, start with [the template guide](templates/README.md). It explains filenames, optional fields, photos, drafts, and how to publish new entries.
 
 | What to change | Where |

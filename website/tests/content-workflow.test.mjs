@@ -47,12 +47,17 @@ test('Markdown updates drive the real static build', async t => {
       assert.doesNotMatch(html, /<video/);
       assert.match(home, /src="\/test-repository\/media\/group-2025-display\.webp"/);
       assert.doesNotMatch(home, /src="[^"]*people\/test\.png"/);
-      for (const id of ['research','team','publications','opportunities','contact']) {
+      for (const id of ['research','team','publications','lab-tour','opportunities','contact']) {
         const route = await readFile(join(fixture, `dist/${id}/index.html`), 'utf8');
         assert.match(route, new RegExp(`href="/test-repository/${id}/" aria-current="page"`));
         assert.equal((route.match(/<h1[ >]/g) || []).length, 1);
       }
       assert.match(html, /<article[^>]*data-person="test-current"/);
+      const tour = await readFile(join(fixture, 'dist/lab-tour/index.html'), 'utf8');
+      assert.match(tour, /<h2 id="equipment-synthetic">Synthetic Equipment<\/h2>/);
+      assert.match(tour, /<h2 id="equipment-analytical">Analytical Devices<\/h2>/);
+      assert.match(tour, /src="\/test-repository\/media\/equipment\//);
+      assert.match(tour, /Shared Facilities/);
       assert.match(html, /<li[^>]*data-person="test-alumni"/);
       assert.match(html, /href="https:\/\/example.org\/alumni-thesis"/);
     });

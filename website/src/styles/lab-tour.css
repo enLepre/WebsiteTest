@@ -1,0 +1,22 @@
+/* Keep all eight main links readable before the header wraps. */
+header nav a { white-space: nowrap; }
+@media (max-width: 1150px) {
+  header .bar { flex-wrap: wrap; padding-top: 15px; padding-bottom: 15px; gap: 12px; }
+  header nav { flex-wrap: wrap; }
+}
+.equipment-section { margin-top: 52px; }
+.equipment-section > h2, .shared-facilities > h2 { margin-bottom: 28px; }
+.equipment-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 38px 30px; }
+.equipment-card { min-width: 0; }
+.equipment-card img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain; background: #f7f7f8; border-radius: 5px; }
+.equipment-card h3 { margin: 15px 0 0; font-size: 16px; line-height: 1.5; font-weight: 500; }
+.equipment-description { margin-top: 10px; color: var(--muted); font-size: 15px; }
+.shared-facilities { margin-top: 64px; }
+.shared-facilities ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 30px; list-style: none; padding: 0; margin: 0; }
+.shared-facilities a { color: var(--blue); text-decoration: underline; text-underline-offset: 4px; }
+@media (max-width: 850px) { .equipment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) {
+  .equipment-grid, .shared-facilities ul { grid-template-columns: 1fr; }
+  .equipment-section { margin-top: 36px; }
+  .shared-facilities { margin-top: 44px; }
+}

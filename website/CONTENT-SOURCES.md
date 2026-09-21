@@ -13,6 +13,8 @@ The existing typography, scrolling homepage, edited heading, absence of dividers
 
 ## Source limitations
 
+Lab Tour added on 2026-09-21 from https://tilleyresearchgroup.com/lab-tour/: 18 synthetic instruments, 12 analytical instruments, and the four linked UZH shared facilities. All 30 photographs were supplied locally in `media/Equipment/` and copied without re-encoding to `website/public/media/equipment/`, using normalized filenames. Instrument names and order follow the original page; the original spelling “Microspcope” was corrected to “Microscope”. The short page introduction is new. The original photo files are preserved.
+
 Individual team email addresses are protected in the retrieved source. They have not been guessed or replaced with a generic address. David's existing public address is retained.
 
 The original PhD vacancy links to https://apply.mnf.uzh.ch/positiondetails/54984706, which redirected to UZH's general application portal during verification. The source link is preserved. Thesis URLs are preserved; some repository pages could not be fetched for live verification.

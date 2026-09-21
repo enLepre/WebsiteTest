@@ -5,6 +5,14 @@ const localAsset = z.string().regex(/^(people|media)\/[a-zA-Z0-9_./-]+$/)
   .refine(value => !value.split('/').includes('..'), 'Asset paths must stay inside public/');
 const common = { order: z.number().int().default(100), draft: z.boolean().default(false) };
 export const collections = {
+  equipment: defineCollection({
+    loader: glob({ pattern: '*.md', base: './content/equipment' }),
+    schema: z.object({
+      title: z.string().min(1), category: z.enum(['synthetic', 'analytical']),
+      image: localAsset, imageAlt: z.string().min(1),
+      ...common,
+    }),
+  }),
   news: defineCollection({
     loader: glob({ pattern: '**/*.md', base: './content/news' }),
     schema: z.object({

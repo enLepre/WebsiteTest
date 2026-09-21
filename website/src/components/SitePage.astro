@@ -3,6 +3,7 @@ import { getCollection, getEntry, render } from 'astro:content';
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import '../styles/site.css';
+import '../styles/lab-tour.css';
 import navigationScript from '../scripts/navigation.js?raw';
 import publicationSync from '../data/publication-sync.json';
 import importedPublications from '../data/publications-auto.json';
@@ -15,6 +16,7 @@ const asset = (path: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/
 const byOrder = (a: any, b: any) => a.data.order - b.data.order || a.id.localeCompare(b.id);
 const people = (await getCollection('people', ({ data }) => !data.draft)).sort(byOrder);
 const research = (await getCollection('research', ({ data }) => !data.draft)).sort(byOrder);
+const equipment = (await getCollection('equipment', ({ data }) => !data.draft)).sort(byOrder);
 const publications = mergePublications(await getCollection('publications'), importedPublications.publications, publicationSync);
 async function section(id: string) {
   const entry = await getEntry('sections', id);
@@ -27,9 +29,13 @@ const team = await section('team');
 const papers = await section('publications');
 const opportunities = await section('opportunities');
 const contact = await section('contact');
+const labTour = await section('lab-tour');
+const LabTourBody = labTour.Content;
+const sharedFacilities = await section('shared-facilities');
+const SharedFacilitiesBody = sharedFacilities.Content;
 const HeroBody = hero.Content, ResearchBody = science.Content, TeamBody = team.Content;
 const PapersBody = papers.Content, OpportunitiesBody = opportunities.Content, ContactBody = contact.Content;
-for (const path of [...people.flatMap(p => [p.data.photo, p.data.thumbnail]).filter(Boolean), ...research.map(r => r.data.image).filter(p => p && !p.startsWith('https://')), hero.video]) {
+for (const path of [...equipment.map(entry => entry.data.image), ...people.flatMap(p => [p.data.photo, p.data.thumbnail]).filter(Boolean), ...research.map(r => r.data.image).filter(p => p && !p.startsWith('https://')), hero.video]) {
   if (path && !existsSync(resolve('public', path))) throw new Error(`Missing asset: public/${path}`);
 }
 if (!hero.video) throw new Error('Add video: media/lab.webm to content/sections/hero.md');
@@ -52,7 +58,7 @@ const alumni = people.filter(p => p.data.status === 'alumni');
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Tilley Research Group at the University of Zurich. Solar fuels, electrosynthesis, and materials chemistry." />
-    <title>{page === 'home' ? contact.title : page === 'person' ? `${profile.data.name} | ${contact.title}` : `${({research: science.title, team: team.title, news: newsSection.title, publications: papers.title, opportunities: opportunities.title, contact: 'Contact'})[page]} | ${contact.title}`}</title>
+    <title>{page === 'home' ? contact.title : page === 'person' ? `${profile.data.name} | ${contact.title}` : `${({research: science.title, team: team.title, news: newsSection.title, publications: papers.title, 'lab-tour': labTour.title, opportunities: opportunities.title, contact: 'Contact'})[page]} | ${contact.title}`}</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23202125'/%3E%3Ctext x='7' y='24' fill='white' font-family='Georgia' font-size='25'%3ET%3C/text%3E%3C/svg%3E" />
   </head>
   <body id="top">
@@ -60,7 +66,7 @@ const alumni = people.filter(p => p.data.status === 'alumni');
     <header><div class="wrap bar">
       <a class="brand" href={pageUrl('home')}>{contact.title}</a>
       <nav aria-label="Main navigation">
-        {[['home','Home'],['team',team.title],['research',science.title],['publications',papers.title],['news',newsSection.title],['opportunities',opportunities.title],['contact','Contact']].map(([id,label]) => <a href={pageUrl(id)} aria-current={page === id || (page === 'person' && id === 'team') ? 'page' : undefined}>{label}</a>)}
+        {[['home','Home'],['team',team.title],['research',science.title],['publications',papers.title],['lab-tour',labTour.title],['news',newsSection.title],['opportunities',opportunities.title],['contact','Contact']].map(([id,label]) => <a href={pageUrl(id)} aria-current={page === id || (page === 'person' && id === 'team') ? 'page' : undefined}>{label}</a>)}
       </nav>
     </div></header>
     <main id="content" tabindex="-1">
@@ -140,6 +146,23 @@ const alumni = people.filter(p => p.data.status === 'alumni');
         }))}</div>
         {page === 'home' && <a class="summary-link" href={pageUrl('publications')}>All publications →</a>}
       </div></section></>}
+      {page === 'lab-tour' && <section class="content lab-tour"><div class="wrap">
+        <div class="section-head section-head-stacked"><h1>{labTour.title}</h1><div><LabTourBody /></div></div>
+        {await Promise.all([['synthetic', 'Synthetic Equipment'], ['analytical', 'Analytical Devices']].map(async ([category, title]) => {
+          const instruments = equipment.filter(entry => entry.data.category === category);
+          return instruments.length > 0 && <section class="equipment-section" aria-labelledby={`equipment-${category}`}>
+            <h2 id={`equipment-${category}`}>{title}</h2>
+            <div class="equipment-grid">{await Promise.all(instruments.map(async entry => {
+              const { Content } = await render(entry);
+              return <article class="equipment-card" data-equipment={entry.id}>
+                <img src={asset(entry.data.image)} alt={entry.data.imageAlt} loading="lazy" decoding="async" />
+                <h3>{entry.data.title}</h3>{entry.body?.trim() && <div class="equipment-description"><Content /></div>}
+              </article>;
+            }))}</div>
+          </section>;
+        }))}
+        <section class="shared-facilities" aria-labelledby="shared-facilities-title"><h2 id="shared-facilities-title">{sharedFacilities.title}</h2><SharedFacilitiesBody /></section>
+      </div></section>}
       {page === 'opportunities' && <>      <section class="content opportunities" id="opportunities"><div class="wrap">
         <div class="section-head section-head-stacked"><h1>{opportunities.title}</h1><div><OpportunitiesBody />
           {opportunities.linkUrl && <a href={opportunities.linkUrl}>{opportunities.linkLabel || 'More information'}</a>}
