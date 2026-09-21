@@ -3,7 +3,7 @@ name: "Dr. Pardis Adams"
 role: "postdoc"
 status: "current"
 photo: "people/pardis-adams-profile.webp"
-order: 5
+order: 6
 draft: false
 roleLabel: "Post-doctoral Associate"
 photoWidth: 1200

@@ -3,7 +3,7 @@ name: "Dr. Nayeong Kim"
 role: "postdoc"
 status: "current"
 photo: "people/nayeong-kim-profile.webp"
-order: 6
+order: 5
 draft: false
 roleLabel: "Post-doctoral Associate"
 photoWidth: 1200
