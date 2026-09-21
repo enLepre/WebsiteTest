@@ -124,3 +124,19 @@ body{min-height:100vh;display:flex;flex-direction:column}main{flex:1}main:focus{
   .publication-filters select option:checked{background:#f0f3fa;color:var(--blue)}
   .publication-filters select option::checkmark{color:var(--blue)}
 }
+
+/* Justify prose consistently on desktop and mobile. */
+.home-quote p,
+.research-grid p,
+.research-details :is(p, li),
+.profile-biography :is(p, li),
+.news-feed :is(p, li),
+.news-highlights p,
+.section-head p,
+#team > .wrap > p,
+.publication-note :is(p, li) {
+  text-align: justify;
+  text-align-last: start;
+  hyphens: auto;
+}
+
