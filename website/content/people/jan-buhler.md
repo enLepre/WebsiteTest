@@ -1,7 +1,7 @@
 ---
 name: "Dr. Jan Bühler"
 role: "postdoc"
-status: "current"
+status: "alumni"
 photo: "people/jan-buhler-profile.webp"
 order: 4
 draft: false
@@ -11,7 +11,7 @@ photoHeight: 1013
 thumbnail: "people/jan-buhler-thumb.webp"
 thumbnailWidth: 480
 thumbnailHeight: 405
-thesis: "https://www.zora.uzh.ch/id/eprint/263151/"
+thesis: "https://www.zora.uzh.ch/entities/publication/d6d4bd70-de81-4a81-a7f0-6f6a5b0bb4b7"
 ---
 
 **Education**
