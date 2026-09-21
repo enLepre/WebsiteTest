@@ -4,15 +4,18 @@
   const header = document.querySelector('header');
   const links = [...header.querySelectorAll('nav a')];
   const routes = links.map(link => new URL(link.href).pathname);
+  const footerRoutes = [...document.querySelectorAll('footer [data-footer-link]')].map(link => new URL(link.href).pathname);
+  const isFooter = path => footerRoutes.includes(path);
   const teamRoute = routes[1];
   const isProfile = path => path.startsWith(teamRoute) && /^[^/]+\/$/.test(path.slice(teamRoute.length));
   const routeIndex = path => isProfile(path) ? 1.5 : routes.indexOf(path);
-  const canNavigate = path => routes.includes(path) || isProfile(path);
+  const canNavigate = path => routes.includes(path) || isProfile(path) || isFooter(path);
   const cache = new Map();
   let current = location.pathname;
   let busy = false;
   let pendingUrl;
   let cleanupVideo = () => {};
+  let footerReturn = history.state?.footerReturn || null;
 
   function initializePublicationFilters() {
     const main = document.querySelector('body > main');
@@ -58,6 +61,8 @@
   }
 
   function initializePage() {
+    const back = document.querySelector('[data-footer-back]');
+    if (back && footerReturn && canNavigate(footerReturn.path)) back.href = footerReturn.path;
     initializeExternalLinks();
     initializePublicationFilters();
     cleanupVideo();
@@ -132,8 +137,8 @@
     }));
   }
 
-  async function navigate(url, historyChange = false) {
-    if (busy) { pendingUrl = url; return; }
+  async function navigate(url, historyChange = false, trigger = null) {
+    if (busy) { pendingUrl = { url, historyChange, trigger }; return; }
     busy = true;
     header.setAttribute('aria-busy', 'true');
     let overlay;
@@ -145,6 +150,39 @@
     const finishMotion = () => { animation?.finish(); portraitAnimations.forEach(item => item.finish()); };
     try {
       rememberPage();
+      const reverseFooter = isFooter(current) && (trigger?.hasAttribute('data-footer-back') || (historyChange && footerReturn?.path === url.pathname));
+      if (isFooter(url.pathname) || reverseFooter) {
+        const departure = current;
+        const origin = footerReturn;
+        const nextOrigin = historyChange ? history.state?.footerReturn || null
+          : { path: current, scrollY: window.scrollY };
+        const destination = await loadPage(url.pathname);
+        const footerLink = (path) => [...document.querySelectorAll('footer [data-footer-link]')].find(link => new URL(link.href).pathname === path);
+        const source = reverseFooter ? document.querySelector('[data-footer-title]') : footerLink(url.pathname);
+        await runFooterZoom({
+          source, reverse: reverseFooter, reducedMotion,
+          update: () => {
+            cleanupVideo();
+            document.querySelector('main').replaceWith(destination.main.cloneNode(true));
+            document.querySelector('footer').replaceWith(destination.footer.cloneNode(true));
+            document.title = destination.title;
+            current = url.pathname;
+            footerReturn = isFooter(current) ? nextOrigin : null;
+            links.forEach(link => {
+              if (new URL(link.href).pathname === (isProfile(current) ? teamRoute : current)) link.setAttribute('aria-current', 'page');
+              else link.removeAttribute('aria-current');
+            });
+            if (!historyChange) history.pushState({ footerReturn }, '', url);
+            window.scrollTo({ top: reverseFooter ? (origin?.scrollY || destination.scrollY || 0) : 0, behavior: 'instant' });
+            // Direct visits have no saved source. Land on the footer for the reverse zoom.
+            if (reverseFooter && !origin) footerLink(departure)?.scrollIntoView({ block: 'center', behavior: 'instant' });
+            initializePage();
+            document.querySelector('main').focus({ preventScroll: true });
+          },
+          target: () => reverseFooter ? footerLink(departure) : document.querySelector('[data-footer-title]'),
+        });
+        return;
+      }
       const from = routeIndex(current);
       const to = routeIndex(url.pathname);
       const direction = to > from ? 1 : -1;
@@ -153,15 +191,15 @@
         : null;
       const returningToTeam = isProfile(current) && url.pathname === teamRoute;
       const sourcePortrait = returningToTeam ? document.querySelector('main .profile-portrait') : sourceLink?.querySelector('img');
-      const paths = reducedMotion.matches ? [url.pathname] : [current];
-      if (!reducedMotion.matches) {
+      const paths = reducedMotion.matches || isFooter(current) ? [url.pathname] : [current];
+      if (!reducedMotion.matches && !isFooter(current)) {
         const between = routes.filter((path, i) => direction > 0 ? i > from && i < to : i < from && i > to);
         paths.push(...(direction > 0 ? between : between.reverse()), url.pathname);
       }
       const pages = await Promise.all(paths.map(loadPage));
       const destination = pages.at(-1);
       let destinationMain = destination.main.cloneNode(true);
-      let destinationScroll = returningToTeam ? (destination.scrollY || 0) : 0;
+      let destinationScroll = returningToTeam || historyChange ? (destination.scrollY || 0) : 0;
       const targetPortrait = returningToTeam
         ? [...destinationMain.querySelectorAll('.member-photo')].find(link => new URL(link.getAttribute('href'), location.href).pathname === current)?.querySelector('img')
         : destinationMain.querySelector('.profile-portrait');
@@ -288,6 +326,7 @@
       document.querySelector('footer').replaceWith(destination.footer.cloneNode(true));
       document.title = destination.title;
       current = url.pathname;
+      footerReturn = null;
       links.forEach(link => {
         if (new URL(link.href).pathname === (isProfile(current) ? teamRoute : current)) link.setAttribute('aria-current', 'page');
         else link.removeAttribute('aria-current');
@@ -311,7 +350,7 @@
       if (pendingUrl) {
         const next = pendingUrl;
         pendingUrl = undefined;
-        if (next.pathname !== current) navigate(next);
+        if (next.url.pathname !== current) navigate(next.url, next.historyChange, next.trigger);
       }
     }
   }
@@ -322,13 +361,15 @@
   initializePage();
   // file:// previews retain normal links because browsers block local fetches.
   if (!['http:', 'https:'].includes(location.protocol)) return;
+  history.scrollRestoration = 'manual';
   document.addEventListener('click', event => {
     const link = event.target.closest('a[href]');
     if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
     const url = new URL(link.href);
     if (url.origin !== location.origin || url.hash || url.search || !canNavigate(current) || !canNavigate(url.pathname)) return;
     event.preventDefault();
-    if (url.pathname !== current || busy) navigate(url);
+    if (link.hasAttribute('data-footer-back') && footerReturn?.path === url.pathname) history.back();
+    else if (url.pathname !== current || busy) navigate(url, false, link);
   });
   window.addEventListener('popstate', () => {
     if (location.pathname === current) return;

@@ -50,6 +50,15 @@ test('Markdown updates drive the real static build', async t => {
       assert.doesNotMatch(html, /<video/);
       assert.match(home, /src="\/test-repository\/media\/group-2025-display\.webp"/);
       assert.doesNotMatch(home, /src="[^"]*people\/test\.png"/);
+      const header = home.match(/<header>[\s\S]*?<\/header>/)[0];
+      const footer = home.match(/<footer>[\s\S]*?<\/footer>/)[0];
+      assert.doesNotMatch(header, /\/(?:opportunities|contact)\//);
+      assert.match(footer, />Opportunities<\/a>/);
+      assert.match(footer, />Contacts<\/a>/);
+      const contacts = await readFile(join(fixture, 'dist/contact/index.html'), 'utf8');
+      assert.match(contacts, /<title>Contacts \|/);
+      assert.match(contacts, /<h1><span data-footer-title>Contacts<\/span><\/h1>/);
+      assert.match(contacts, /data-footer-back/);
       for (const id of ['research','team','publications','lab-tour','opportunities','contact']) {
         const route = await readFile(join(fixture, `dist/${id}/index.html`), 'utf8');
         assert.match(route, new RegExp(`href="/test-repository/${id}/" aria-current="page"`));
