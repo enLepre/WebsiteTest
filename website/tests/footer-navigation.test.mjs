@@ -87,5 +87,19 @@ test('footer links, Back, browser Back/Forward, and nested footer visits restore
   await click(document.back);
   assert.equal(location.pathname, home);
   assert.equal(window.scrollY, 720);
+  // Choosing a menu page also slides down, but starts at its top instead of
+  // borrowing the saved scroll position that belongs to the Back action.
+  for (const path of [contacts, opportunities]) {
+    for (const target of headerLinks) {
+      window.scrollY = 360;
+      await click(footerLink(path));
+      const count = transitions.length;
+      await click(target);
+      assert.equal(location.pathname, new URL(target.href).pathname);
+      assert.equal(transitions.length, count + 1);
+      assert.equal(transitions.at(-1).reverse, true);
+      assert.equal(window.scrollY, 0);
+    }
+  }
   assert.deepEqual(fallbacks, []);
 });

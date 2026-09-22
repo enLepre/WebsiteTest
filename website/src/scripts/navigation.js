@@ -150,7 +150,8 @@
     const finishMotion = () => { animation?.finish(); portraitAnimations.forEach(item => item.finish()); };
     try {
       rememberPage();
-      const reverseFooter = isFooter(current) && (trigger?.hasAttribute('data-footer-back') || (historyChange && footerReturn?.path === url.pathname));
+      const returnToOrigin = isFooter(current) && (trigger?.hasAttribute('data-footer-back') || (historyChange && footerReturn?.path === url.pathname));
+      const reverseFooter = isFooter(current);
       if (isFooter(url.pathname) || reverseFooter) {
         const departure = current;
         const origin = footerReturn;
@@ -172,9 +173,9 @@
               else link.removeAttribute('aria-current');
             });
             if (!historyChange) history.pushState({ footerReturn }, '', url);
-            window.scrollTo({ top: reverseFooter ? (origin?.scrollY || destination.scrollY || 0) : 0, behavior: 'instant' });
+            window.scrollTo({ top: returnToOrigin ? (origin?.scrollY ?? destination.scrollY ?? 0) : historyChange ? (destination.scrollY ?? 0) : 0, behavior: 'instant' });
             // Direct visits have no saved source. Land on the footer for the reverse scroll.
-            if (reverseFooter && !origin) footerLink(departure)?.scrollIntoView({ block: 'center', behavior: 'instant' });
+            if (returnToOrigin && !origin) footerLink(departure)?.scrollIntoView({ block: 'center', behavior: 'instant' });
             initializePage();
             document.querySelector('main').focus({ preventScroll: true });
           },

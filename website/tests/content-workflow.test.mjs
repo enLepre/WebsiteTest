@@ -61,6 +61,7 @@ test('Markdown updates drive the real static build', async t => {
       assert.match(contacts, /data-footer-back/);
       for (const id of ['research','team','publications','lab-tour','opportunities','contact']) {
         const route = await readFile(join(fixture, `dist/${id}/index.html`), 'utf8');
+        assert.equal(/<footer hidden(?:[ >])/.test(route), ['opportunities', 'contact'].includes(id));
         assert.match(route, new RegExp(`href="/test-repository/${id}/" aria-current="page"`));
         assert.equal((route.match(/<h1[ >]/g) || []).length, 1);
       }
