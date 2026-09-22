@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 
 const script = readFileSync(new URL('../src/scripts/footer-scroll.mjs', import.meta.url), 'utf8').replace('export async function', 'async function');
-function fixture({ reduced = false, supported = true, failure = false } = {}) {
+function fixture({ reduced = false, supported = true, failure = false, footerHidden = false, footerTop = 600 } = {}) {
   const motion = new EventTarget(), window = new EventTarget(), animations = [], overlays = [];
   motion.matches = reduced; window.innerHeight = 800;
   let updates = 0;
@@ -22,27 +22,39 @@ function fixture({ reduced = false, supported = true, failure = false } = {}) {
   }
   const document = { documentElement: { animate: supported ? () => {} : undefined },
     body: { append: node => overlays.push(node) }, createElement: element,
-    querySelector: selector => selector === 'header' ? { getBoundingClientRect: () => ({ bottom: 80 }) } : element() };
+    querySelector: selector => selector === 'header' ? { getBoundingClientRect: () => ({ bottom: 80 }) }
+      : selector === 'body > footer' ? { hidden: footerHidden, getBoundingClientRect: () => ({ top: footerTop }) }
+      : element() };
   const run = runInNewContext(script + '\nrunFooterScroll', { document, window });
   return { motion, window, animations, overlays, updates: () => updates,
     run: reverse => run({ reverse, reducedMotion: motion, update() { updates++; if (failure) throw Error('Failed update'); } }),
   };
 }
-for (const reverse of [false, true]) test(`footer scroll ${reverse ? 'back' : 'forward'} moves complete pages in opposite directions below the header`, async () => {
+for (const reverse of [false, true]) test(`footer scroll ${reverse ? 'back' : 'forward'} moves only main content between the header and stationary footer`, async () => {
   const f = fixture(); const result = f.run(reverse);
   assert.equal(f.overlays[0].style.top, '80px');
   assert.equal(f.overlays[0].inert, true);
   assert.equal(f.overlays[0].children.length, 2);
-  // Each panel contains both the main content and footer, at their actual scroll positions.
-  assert.equal(f.overlays[0].children[0].children.length, 2);
+  // The footer is never cloned into either moving panel.
+  assert.equal(f.overlays[0].children[0].children.length, 1);
+  assert.equal(f.overlays[0].children[1].children.length, 1);
+  assert.equal(f.overlays[0].style.bottom, '200px');
   assert.equal(f.overlays[0].children[0].children[0].style.top, '-1280px');
   assert.equal(f.overlays[0].children[1].children[0].style.top, '0px');
-  assert.equal(f.animations[0].frames[1].transform, `translateY(${reverse ? 720 : -720}px)`);
-  assert.equal(f.animations[1].frames[0].transform, `translateY(${reverse ? -720 : 720}px)`);
+  assert.equal(f.animations[0].frames[1].transform, `translateY(${reverse ? 520 : -520}px)`);
+  assert.equal(f.animations[1].frames[0].transform, `translateY(${reverse ? -520 : 520}px)`);
   f.animations.forEach(animation => animation.finish()); await result;
   assert.equal(f.updates(), 1);
   assert(f.overlays[0].removed);
   assert(f.animations.every(animation => animation.cancelled));
+});
+test('hidden and offscreen footers leave the full main viewport available', async () => {
+  for (const options of [{ footerHidden: true }, { footerTop: 1200 }]) {
+    const f = fixture(options); const result = f.run(false);
+    assert.equal(f.animations[0].frames[1].transform, 'translateY(-720px)');
+    f.animations.forEach(animation => animation.finish()); await result;
+    assert(f.overlays[0].removed);
+  }
 });
 test('reduced motion and unsupported animation navigate once without an overlay', async () => {
   for (const options of [{ reduced: true }, { supported: false }]) {

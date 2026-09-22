@@ -1,11 +1,11 @@
-// Slide the visible page and its footer through the viewport below the fixed menu.
+// Slide only the main content, keeping the menu and destination footer still.
 export async function runFooterScroll({ reverse, update, reducedMotion }) {
   if (reducedMotion.matches || !document.documentElement.animate) {
     update();
     return;
   }
   const top = document.querySelector('header').getBoundingClientRect().bottom;
-  const distance = Math.max(0, window.innerHeight - top);
+  let distance = Math.max(0, window.innerHeight - top);
   if (!distance) { update(); return; }
   const overlay = document.createElement('div');
   overlay.className = 'footer-scroll';
@@ -17,7 +17,7 @@ export async function runFooterScroll({ reverse, update, reducedMotion }) {
   function snapshot() {
     const panel = document.createElement('div');
     panel.className = 'footer-scroll-panel';
-    for (const selector of ['body > main', 'body > footer']) {
+    for (const selector of ['body > main']) {
       const element = document.querySelector(selector);
       const rect = element.getBoundingClientRect();
       const copy = element.cloneNode(true);
@@ -33,9 +33,18 @@ export async function runFooterScroll({ reverse, update, reducedMotion }) {
     const departing = snapshot();
     overlay.append(departing);
     document.body.append(overlay);
-    // The opaque overlay keeps the old footer visible while the new page is positioned.
     update();
     if (reducedMotion.matches) return;
+    // Leave the real footer outside the animated viewport. Its normal document
+    // position is established by update(), including restored Back positions.
+    const footer = document.querySelector('body > footer');
+    if (footer && !footer.hidden) {
+      const footerTop = footer.getBoundingClientRect().top;
+      const bottom = Math.min(window.innerHeight, Math.max(top, footerTop));
+      overlay.style.bottom = `${window.innerHeight - bottom}px`;
+      distance = bottom - top;
+    }
+    if (!distance) return;
     const arriving = snapshot();
     overlay.append(arriving);
     const direction = reverse ? -1 : 1;
