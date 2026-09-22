@@ -6,11 +6,11 @@ import { runInNewContext } from 'node:vm';
 const script = readFileSync(new URL('../src/scripts/navigation.js', import.meta.url), 'utf8');
 const home = '/site/', team = '/site/team/', profile = '/site/team/david-tilley/';
 
-async function fixture({ kind, menu = false, historyChange = false, reduced = false }) {
-  const destination = kind === 'team' ? team : profile;
+async function fixture({ kind, menu = false, historyChange = false, reduced = false, researchId = 'solar-fuels' }) {
+  const destination = kind === 'research' ? '/site/research/' : kind === 'team' ? team : profile;
   const listeners = {}, windowListeners = {}, animations = [], fetched = [], fallbacks = [];
   const sourceRect = { left: 120, top: 300, width: 400, height: 267, bottom: 567 };
-  const targetRect = { left: 50, top: 145, width: kind === 'team' ? 1048 : 320, height: kind === 'team' ? 698 : 400, bottom: 843 };
+  const targetRect = { left: 50, top: kind === 'research' ? 1800 : 145, width: kind === 'team' ? 1048 : 320, height: kind === 'team' ? 698 : 400, bottom: 843 };
   const sourceImage = element('source-image', sourceRect);
   let main = makeMain(home);
   const footer = element('footer');
@@ -22,7 +22,7 @@ async function fixture({ kind, menu = false, historyChange = false, reduced = fa
   const history = { state: null, pushState(state, unused, url) { this.state = state; location.pathname = url.pathname; } };
   function element(kind, rect = targetRect) {
     return { kind, style: { removeProperty(name) { delete this[name]; } }, children: [],
-      getBoundingClientRect: () => rect, decode: async () => {},
+      getBoundingClientRect: () => rect, decode: async () => {}, scrollIntoView() { this.scrolled = true; },
       setAttribute() {}, removeAttribute() {}, focus() {}, remove() { this.removed = true; },
       append(node) { this.children.push(node); },
       get firstElementChild() { return this.children[0]; }, get lastElementChild() { return this.children.at(-1); },
@@ -35,6 +35,8 @@ async function fixture({ kind, menu = false, historyChange = false, reduced = fa
   function makeMain(path) {
     const node = element('main');
     const photo = element('destination-image');
+    photo.id = `research-${researchId}`;
+    if (path === '/site/research/') node.querySelectorAll = selector => selector === '.research-image' ? [element('wrong-image'), photo] : [];
     node.querySelector = selector =>
       (path === profile && selector === '.profile-portrait') || (path === team && selector === '.team-current-photo img') ? photo : null;
     node.cloneNode = () => makeMain(path);
@@ -68,14 +70,33 @@ async function fixture({ kind, menu = false, historyChange = false, reduced = fa
     location.pathname = destination; location.href = location.origin + destination;
     windowListeners.popstate();
   } else {
-    listeners.click({ target: link(destination, menu ? null : kind), button: 0, preventDefault() {} });
+    const href = destination + (kind === 'research' && !menu ? `#research-${researchId}` : '');
+    listeners.click({ target: link(href, menu ? null : kind), button: 0, preventDefault() {} });
   }
   await new Promise(resolve => setImmediate(resolve));
   assert.deepEqual(fallbacks, []);
   assert.equal(location.pathname, destination);
   assert.equal(sourceImage.style.visibility, undefined);
-  return { animations, fetched, sourceRect, targetRect };
+  return { animations, fetched, sourceRect, targetRect, scrollY: window.scrollY };
 }
+for (const researchId of ['solar-fuels', 'characterization', 'electrosynthesis']) {
+  test(`homepage research figure zooms to the matching ${researchId} section`, async () => {
+    const f = await fixture({ kind: 'research', researchId });
+    const zoom = f.animations.find(item => item.kind === 'destination-image');
+    assert(zoom);
+    assert.equal(zoom.frames[1].objectPosition, '50% 50%');
+    assert(f.scrollY > 0, 'navigation must land at the research figure, not the page top');
+    assert.deepEqual(f.fetched, ['/site/research/']);
+  });
+}
+test('research figure links still navigate when reduced motion is enabled', async () => {
+  assert.equal((await fixture({ kind: 'research', reduced: true })).animations.length, 0);
+});
+test('Research menu retains the horizontal transition', async () => {
+  const f = await fixture({ kind: 'research', menu: true });
+  assert(!f.animations.some(item => item.kind === 'destination-image'));
+  assert(f.animations.some(item => item.frames.some(frame => frame.transform?.includes('translateX'))));
+});
 
 for (const kind of ['profile', 'team']) {
   test(`homepage ${kind} photo zooms directly into its matching destination image`, async () => {

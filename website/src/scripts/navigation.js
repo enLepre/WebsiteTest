@@ -110,13 +110,13 @@
 
   // Decode only images that will pass through the viewport. Repeat after each
   // batch because images without intrinsic dimensions can change the layout.
-  async function prepareVisibleMedia(overlay) {
+  async function prepareVisibleMedia(overlay, allImages = false) {
     const prepared = new Set();
     const viewport = overlay.getBoundingClientRect();
     while (true) {
       const images = [...overlay.querySelectorAll('img')].filter(image => {
         const rect = image.getBoundingClientRect();
-        return !prepared.has(image) && rect.top < viewport.bottom && rect.bottom >= viewport.top;
+        return !prepared.has(image) && (allImages || (rect.top < viewport.bottom && rect.bottom >= viewport.top));
       });
       if (!images.length) break;
       await Promise.all(images.map(async image => {
@@ -190,9 +190,10 @@
       const from = routeIndex(current);
       const to = routeIndex(url.pathname);
       const direction = to > from ? 1 : -1;
-      // Opt in only for the two homepage photo links, never menu/history visits.
+      // Opt in only for marked homepage image links, never menu/history visits.
       const homePhoto = !historyChange && current === routes[0] && trigger?.hasAttribute('data-home-photo')
         ? trigger.getAttribute('data-home-photo') : null;
+      const researchId = homePhoto === 'research' ? decodeURIComponent(url.hash.slice(1)) : null;
       const sourceLink = homePhoto ? trigger : current === teamRoute && isProfile(url.pathname)
         ? [...document.querySelectorAll('main .member-photo')].find(link => new URL(link.href).pathname === url.pathname)
         : null;
@@ -209,6 +210,7 @@
       let destinationScroll = returningToTeam || historyChange ? (destination.scrollY || 0) : 0;
       const targetPortrait = returningToTeam
         ? [...destinationMain.querySelectorAll('.member-photo')].find(link => new URL(link.getAttribute('href'), location.href).pathname === current)?.querySelector('img')
+        : researchId ? [...destinationMain.querySelectorAll('.research-image')].find(image => image.id === researchId)
         : destinationMain.querySelector(homePhoto === 'team' ? '.team-current-photo img' : '.profile-portrait');
       if (!reducedMotion.matches && sourcePortrait && targetPortrait) {
         overlay = document.createElement('div');
@@ -232,10 +234,18 @@
           }
         }
         const ready = await Promise.race([
-          prepareVisibleMedia(overlay).then(() => true),
+          prepareVisibleMedia(overlay, Boolean(researchId)).then(() => true),
           new Promise(resolve => { preparationTimer = setTimeout(() => resolve(false), 1800); }),
         ]);
         clearTimeout(preparationTimer);
+        if (researchId) {
+          // Position the matching figure before measuring its zoom destination.
+          // Decode all research images first so earlier figures cannot shift it.
+          const rect = targetPortrait.getBoundingClientRect();
+          const top = header.getBoundingClientRect().bottom;
+          destinationScroll = Math.max(0, destinationScroll + rect.top - top - Math.max(0, (window.innerHeight - top - rect.height) / 2));
+          destinationMain.style.transform = `translateY(-${destinationScroll}px)`;
+        }
         const sourceRect = sourcePortrait.getBoundingClientRect();
         const portrait = targetPortrait;
         const targetRect = portrait.getBoundingClientRect();
@@ -249,7 +259,7 @@
             position: 'fixed', left: targetRect.left + 'px', top: targetRect.top + 'px',
             width: targetRect.width + 'px', height: targetRect.height + 'px',
             margin: '0', maxWidth: 'none', transformOrigin: 'top left', zIndex: '1',
-            objectFit: 'cover', objectPosition: 'center top', borderRadius: '5px',
+            objectFit: researchId ? 'contain' : 'cover', objectPosition: researchId ? 'center' : 'center top', borderRadius: '5px',
           });
           hiddenPortrait = sourcePortrait;
           portraitVisibility = sourcePortrait.style.visibility;
@@ -260,7 +270,7 @@
           // instead of stretching the image, and smoothly move the crop with it.
           const photoFrames = homePhoto ? [
             { left: sourceRect.left + 'px', top: sourceRect.top + 'px', width: sourceRect.width + 'px', height: sourceRect.height + 'px', objectPosition: homePhoto === 'profile' ? '50% 35%' : '50% 50%' },
-            { left: targetRect.left + 'px', top: targetRect.top + 'px', width: targetRect.width + 'px', height: targetRect.height + 'px', objectPosition: '50% 0%' },
+            { left: targetRect.left + 'px', top: targetRect.top + 'px', width: targetRect.width + 'px', height: targetRect.height + 'px', objectPosition: researchId ? '50% 50%' : '50% 0%' },
           ] : [
             { transform: `translate(${sourceRect.left - targetRect.left}px, ${sourceRect.top - targetRect.top}px) scale(${sourceRect.width / targetRect.width}, ${sourceRect.height / targetRect.height})` },
             { transform: 'translate(0, 0) scale(1, 1)' },
@@ -345,6 +355,7 @@
       });
       if (!historyChange) history.pushState(null, '', url);
       window.scrollTo({ top: destinationScroll, behavior: 'instant' });
+      if (researchId && reducedMotion.matches) targetPortrait?.scrollIntoView({ block: 'center', behavior: 'instant' });
       document.querySelector('main').focus({ preventScroll: true });
       initializePage();
     } catch {
@@ -378,7 +389,8 @@
     const link = event.target.closest('a[href]');
     if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
     const url = new URL(link.href);
-    if (url.origin !== location.origin || url.hash || url.search || !canNavigate(current) || !canNavigate(url.pathname)) return;
+    const researchPhoto = current === routes[0] && link.hasAttribute('data-home-photo') && link.getAttribute('data-home-photo') === 'research';
+    if (url.origin !== location.origin || (url.hash && !researchPhoto) || url.search || !canNavigate(current) || !canNavigate(url.pathname)) return;
     event.preventDefault();
     if (link.hasAttribute('data-footer-back') && footerReturn?.path === url.pathname) history.back();
     else if (url.pathname !== current || busy) navigate(url, false, link);

@@ -40,6 +40,7 @@ body{min-height:100vh;display:flex;flex-direction:column}main{flex:1}main:focus{
 #team-preview .home-team{grid-template-columns:minmax(0,1.3fr) minmax(0,1.7fr)}
 .research-image{display:block;width:100%;height:auto;object-fit:contain;margin:18px auto 24px;border-radius:4px}
 .research-grid .research-image{height:210px}
+.research-photo-link{display:block}
 .research-details .research-image{max-width:760px;max-height:480px}
 @media(max-width:700px){.leader-group .member img{width:100%;max-width:360px}.home-quote{padding-top:18px;padding-bottom:18px}.home-quote blockquote{font-size:22px}}
 @media(max-width:600px){#team-preview .home-team{grid-template-columns:1fr}#team-preview .home-leader{width:90%}.research-grid .research-image{height:auto;max-height:280px}}
