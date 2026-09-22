@@ -104,7 +104,9 @@ const alumni = people.filter(p => p.data.status === 'alumni');
         </div>
       </div></section>}
       {page === 'team' && <>      <section class="content team" id="team"><div class="wrap">
-        <h1 class="sr-only">{team.title}</h1><TeamBody />
+        <div class="section-head"><h1>The Team</h1></div>
+        <figure class="team-current-photo"><img src={asset('media/group-2025-display.webp')} alt="Tilley Research Group together outdoors in 2025" width="1600" height="1066" decoding="async" /></figure>
+        <TeamBody />
         {await Promise.all(roles.map(async ([role, label]) => {
           const members = people.filter(p => p.data.role === role && p.data.status === 'current');
           if (!members.length) return null;
@@ -119,9 +121,8 @@ const alumni = people.filter(p => p.data.status === 'alumni');
           </div></div>;
         }))}
           <section class="group-history" aria-labelledby="group-history-title">
-            <h3 id="group-history-title">Group photos</h3>
+            <h3 id="group-history-title">Previous group photos</h3>
             {[
-              {year: 2025, width: 1600, height: 1066},
               {year: 2024, width: 1800, height: 779},
               {year: 2022, width: 1800, height: 1200},
             ].map(photo => <figure>
