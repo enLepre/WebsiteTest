@@ -1,7 +1,7 @@
 ---
 title: "Advanced analytical techniques for PEC water splitting"
 homeTitle: "Deep Characterization"
-summary: "Studying semiconductor materials as thin films enables the use of a suite of techniques for in-depth characterization and understanding, leading to the identification of limitations and subsequent improvement of the system. The second line of our research involves the use of advanced analytical techniques to gain a complete understanding of the underlying (photo)physical processes in PEC materials, which is quite complex."
+summary: "Understanding through advanced analytical techniques"
 order: 2
 image: "media/research-analysis.webp"
 imageAlt: "Dual working electrode and impedance measurements of a photoelectrochemical water-splitting system"
