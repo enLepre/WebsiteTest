@@ -171,7 +171,10 @@ const alumni = people.filter(p => p.data.status === 'alumni');
         {page === 'home' && <a class="summary-link" href={pageUrl('publications')}>All publications →</a>}
       </div></section></>}
       {page === 'lab-tour' && <section class="content lab-tour"><div class="wrap">
-        <div class="section-head section-head-stacked"><h1>{labTour.title}</h1><div><LabTourBody /></div></div>
+        <div class="section-head section-head-stacked">
+          <div class="lab-tour-heading"><h1>{labTour.title}</h1><img class="spark-badge" src={asset('media/spark-bronze.webp')} alt="SPARKHub Bronze certification" width="184" height="195" /></div>
+          <div><LabTourBody /></div>
+        </div>
         {await Promise.all([['synthetic', 'Synthetic Equipment'], ['analytical', 'Analytical Devices']].map(async ([category, title]) => {
           const instruments = equipment.filter(entry => entry.data.category === category);
           return instruments.length > 0 && <section class="equipment-section" aria-labelledby={`equipment-${category}`}>

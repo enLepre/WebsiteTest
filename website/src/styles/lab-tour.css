@@ -4,6 +4,9 @@ header nav a { white-space: nowrap; }
   header .bar { flex-wrap: wrap; padding-top: 15px; padding-bottom: 15px; gap: 12px; }
   header nav { flex-wrap: wrap; }
 }
+.lab-tour-heading { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.spark-badge { display: block; width: 76px; height: auto; flex-shrink: 0; }
+.lab-tour .section-head p a { color: var(--blue); text-decoration: underline; text-underline-offset: 4px; }
 .equipment-section { margin-top: 52px; }
 .equipment-section > h2, .shared-facilities > h2 { margin-bottom: 28px; }
 .equipment-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 38px 30px; }
