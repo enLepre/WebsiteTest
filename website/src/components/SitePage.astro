@@ -99,8 +99,8 @@ const alumni = people.filter(p => p.data.status === 'alumni');
       {page === 'home' && <section class="content team" id="team-preview"><div class="wrap">
 
         <div class="home-team">
-          {david && <article class="home-leader"><h3>David Tilley</h3>{david.data.photo && <a class="home-leader-link" href={pageUrl(`team/${david.id}`)} aria-label="View David Tilley’s profile"><img src={asset(david.data.photo)} alt={david.data.name} width={david.data.photoWidth || 1200} height={david.data.photoHeight || 1200} loading="lazy" decoding="async" /></a>}</article>}
-          <figure class="home-group"><h3>The Team</h3><a href={pageUrl('team')} aria-label="Meet the Tilley Research Group"><img src={asset('media/group-2025-display.webp')} alt="Tilley Research Group together outdoors in 2025" width="1600" height="1066" loading="lazy" decoding="async" /></a></figure>
+          {david && <article class="home-leader"><h3>David Tilley</h3>{david.data.photo && <a class="home-leader-link" data-home-photo="profile" href={pageUrl(`team/${david.id}`)} aria-label="View David Tilley’s profile"><img src={asset(david.data.photo)} alt={david.data.name} width={david.data.photoWidth || 1200} height={david.data.photoHeight || 1200} loading="lazy" decoding="async" /></a>}</article>}
+          <figure class="home-group"><h3>The Team</h3><a data-home-photo="team" href={pageUrl('team')} aria-label="Meet the Tilley Research Group"><img src={asset('media/group-2025-display.webp')} alt="Tilley Research Group together outdoors in 2025" width="1600" height="1066" loading="lazy" decoding="async" /></a></figure>
         </div>
       </div></section>}
       {page === 'team' && <>      <section class="content team" id="team"><div class="wrap">

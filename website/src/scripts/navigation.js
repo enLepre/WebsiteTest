@@ -190,13 +190,16 @@
       const from = routeIndex(current);
       const to = routeIndex(url.pathname);
       const direction = to > from ? 1 : -1;
-      const sourceLink = current === teamRoute && isProfile(url.pathname)
+      // Opt in only for the two homepage photo links, never menu/history visits.
+      const homePhoto = !historyChange && current === routes[0] && trigger?.hasAttribute('data-home-photo')
+        ? trigger.getAttribute('data-home-photo') : null;
+      const sourceLink = homePhoto ? trigger : current === teamRoute && isProfile(url.pathname)
         ? [...document.querySelectorAll('main .member-photo')].find(link => new URL(link.href).pathname === url.pathname)
         : null;
       const returningToTeam = isProfile(current) && url.pathname === teamRoute;
       const sourcePortrait = returningToTeam ? document.querySelector('main .profile-portrait') : sourceLink?.querySelector('img');
-      const paths = reducedMotion.matches || isFooter(current) ? [url.pathname] : [current];
-      if (!reducedMotion.matches && !isFooter(current)) {
+      const paths = reducedMotion.matches || isFooter(current) || homePhoto ? [url.pathname] : [current];
+      if (!reducedMotion.matches && !isFooter(current) && !homePhoto) {
         const between = routes.filter((path, i) => direction > 0 ? i > from && i < to : i < from && i > to);
         paths.push(...(direction > 0 ? between : between.reverse()), url.pathname);
       }
@@ -206,7 +209,7 @@
       let destinationScroll = returningToTeam || historyChange ? (destination.scrollY || 0) : 0;
       const targetPortrait = returningToTeam
         ? [...destinationMain.querySelectorAll('.member-photo')].find(link => new URL(link.getAttribute('href'), location.href).pathname === current)?.querySelector('img')
-        : destinationMain.querySelector('.profile-portrait');
+        : destinationMain.querySelector(homePhoto === 'team' ? '.team-current-photo img' : '.profile-portrait');
       if (!reducedMotion.matches && sourcePortrait && targetPortrait) {
         overlay = document.createElement('div');
         overlay.className = 'page-journey profile-journey';
@@ -253,10 +256,16 @@
           sourcePortrait.style.visibility = 'hidden';
           overlay.style.visibility = 'visible';
           const motion = { duration: 650, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'both' };
-          portraitAnimations.push(portrait.animate([
+          // Homepage crops differ from the destination. Resize the photo frame
+          // instead of stretching the image, and smoothly move the crop with it.
+          const photoFrames = homePhoto ? [
+            { left: sourceRect.left + 'px', top: sourceRect.top + 'px', width: sourceRect.width + 'px', height: sourceRect.height + 'px', objectPosition: homePhoto === 'profile' ? '50% 35%' : '50% 50%' },
+            { left: targetRect.left + 'px', top: targetRect.top + 'px', width: targetRect.width + 'px', height: targetRect.height + 'px', objectPosition: '50% 0%' },
+          ] : [
             { transform: `translate(${sourceRect.left - targetRect.left}px, ${sourceRect.top - targetRect.top}px) scale(${sourceRect.width / targetRect.width}, ${sourceRect.height / targetRect.height})` },
             { transform: 'translate(0, 0) scale(1, 1)' },
-          ], motion));
+          ];
+          portraitAnimations.push(portrait.animate(photoFrames, motion));
           // Reverse the information fade as the portrait returns to the directory.
           portraitAnimations.push(destinationMain.animate([{ opacity: 0 }, { opacity: 1 }], { duration: returningToTeam ? 350 : 220, delay: returningToTeam ? 180 : 0, fill: 'both' }));
           const information = returningToTeam ? document.querySelector('body > main') : destinationMain;
