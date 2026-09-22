@@ -2,4 +2,4 @@
 title: "Research"
 ---
 
-We study electrochemistry and interfaces to solve the next generation problems
+From sunlight to charge, from charge to chemistry
