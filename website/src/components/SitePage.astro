@@ -151,7 +151,7 @@ const alumni = people.filter(p => p.data.status === 'alumni');
         </details>}
       </div></section></>}
       {(page === 'publications' || page === 'home') && <>      <section class="content" id="publications"><div class="wrap">
-        <div class="section-head"><SectionHeading>{page === 'home' ? 'Latest publications' : papers.title}</SectionHeading><div><PapersBody /></div></div>
+        <div class:list={['section-head', { 'section-head-stacked': page === 'home' }]}><SectionHeading>{page === 'home' ? 'Latest publications' : papers.title}</SectionHeading><div><PapersBody /></div></div>
         {page === 'publications' && <>
           <form class="publication-filters" role="search" aria-label="Search publications" hidden>
             <div class="publication-search"><label for="publication-query">Search publications</label><input id="publication-query" type="search" placeholder="Title, keyword, author, or year" autocomplete="off" /></div>
