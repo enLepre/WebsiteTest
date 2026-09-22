@@ -11,12 +11,12 @@ test('footer links, Back, browser Back/Forward, and nested footer visits restore
     get href() { return this._href; }, set href(value) { this._href = new URL(value, base).href; }, textContent: text, target: '',
     hasAttribute: name => attributes.includes(name), setAttribute() {}, removeAttribute() {},
     closest() { return this; }, scrollIntoView() {} });
-  const main = (title = null) => ({ title, style: {}, focus() {},
-    querySelector: () => null, cloneNode() { return main(this.title); },
+  const main = (title = null) => ({ title, style: { removeProperty() {} }, focus() {},
+    querySelector: () => null, querySelectorAll: () => [], cloneNode() { return main(this.title); },
     replaceWith(node) { document.main = node; } });
   const footer = () => ({ links: [link(opportunities, 'Opportunities', ['data-footer-link']), link(contacts, 'Contacts', ['data-footer-link'])],
     cloneNode: footer, replaceWith(node) { document.footer = node; } });
-  const headerLinks = [link(home, 'Home'), link('/site/team/', 'Team')];
+  const headerLinks = [link(home, 'Home'), link('/site/team/', 'Team'), link('/site/publications/', 'Publications'), link('/site/research/', 'Research')];
   const header = { querySelectorAll: () => headerLinks, getBoundingClientRect: () => ({ height: 80 }), setAttribute() {}, removeAttribute() {} };
   const location = { href: base + home, pathname: home, protocol: 'https:', origin: base,
     assign: url => fallbacks.push(url), reload: () => fallbacks.push('reload') };
@@ -49,7 +49,10 @@ test('footer links, Back, browser Back/Forward, and nested footer visits restore
     URL, AbortSignal, document, window, location, history, matchMedia: () => motion,
     ResizeObserver: class { observe() {} }, initializeExternalLinks() {}, initializeHeroVideo() {},
     setTimeout, clearTimeout,
-    fetch: async path => ({ ok: true, text: async () => path }),
+    fetch: async (path, options) => {
+      assert.equal(options.cache, 'no-cache');
+      return { ok: true, text: async () => path };
+    },
     DOMParser: class { parseFromString(path) {
       const heading = { textContent: path === contacts ? 'Contacts' : 'Opportunities', style: {} };
       return { title: heading.textContent, querySelector: selector => selector === 'footer' ? footer() : main(heading) };
@@ -61,7 +64,11 @@ test('footer links, Back, browser Back/Forward, and nested footer visits restore
     },
   });
   const settle = () => new Promise(resolve => setImmediate(resolve));
-  async function click(item) { listeners.click({ target: item, button: 0, preventDefault() {} }); await settle(); }
+  const sharedFooter = document.footer;
+  async function click(item) {
+    listeners.click({ target: item, button: 0, preventDefault() {} }); await settle();
+    assert.equal(document.footer, sharedFooter, 'navigation must preserve the shared footer');
+  }
   const footerLink = path => document.footer.links.find(item => new URL(item.href).pathname === path);
 
   await click(footerLink(contacts));
@@ -101,5 +108,29 @@ test('footer links, Back, browser Back/Forward, and nested footer visits restore
       assert.equal(window.scrollY, 0);
     }
   }
+  motion.matches = true;
+  await click(link('/site/team/test-person/', 'Person'));
+  assert.equal(location.pathname, '/site/team/test-person/');
+  await click(footerLink(contacts));
+  assert.equal(location.pathname, contacts);
+  // Every departure from a personal page except Team uses the downward scroll.
+  for (const target of [headerLinks[0], headerLinks[2], headerLinks[3], ...sharedFooter.links]) {
+    motion.matches = true;
+    await click(link('/site/team/test-person/', 'Person'));
+    motion.matches = false;
+    window.scrollY = 240;
+    const count = transitions.length;
+    await click(target);
+    assert.equal(location.pathname, new URL(target.href).pathname);
+    assert.equal(transitions.length, count + 1);
+    assert.equal(transitions.at(-1).reverse, true);
+    assert.equal(window.scrollY, 0);
+  }
+  motion.matches = true;
+  await click(link('/site/team/test-person/', 'Person'));
+  const count = transitions.length;
+  await click(headerLinks[1]);
+  assert.equal(location.pathname, '/site/team/');
+  assert.equal(transitions.length, count, 'Team must retain its separate portrait transition');
   assert.deepEqual(fallbacks, []);
 });

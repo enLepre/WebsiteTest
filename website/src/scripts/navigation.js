@@ -61,6 +61,11 @@
   }
 
   function initializePage() {
+    // The footer is shared by every page; preserve it when swapping content.
+    document.querySelectorAll('footer [data-footer-link]').forEach(link => {
+      if (new URL(link.href).pathname === current) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
     const back = document.querySelector('[data-footer-back]');
     if (back && footerReturn && canNavigate(footerReturn.path)) back.href = footerReturn.path;
     initializeExternalLinks();
@@ -94,7 +99,7 @@
 
   async function loadPage(path) {
     if (cache.has(path)) return cache.get(path);
-    const response = await fetch(path, { signal: AbortSignal.timeout(5000) });
+    const response = await fetch(path, { cache: 'no-cache', signal: AbortSignal.timeout(5000) });
     if (!response.ok) throw new Error('Page unavailable');
     const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
     if (!doc.querySelector('main#content') || !doc.querySelector('footer')) throw new Error('Invalid page');
@@ -151,8 +156,9 @@
     try {
       rememberPage();
       const returnToOrigin = isFooter(current) && (trigger?.hasAttribute('data-footer-back') || (historyChange && footerReturn?.path === url.pathname));
-      const reverseFooter = isFooter(current);
-      if (isFooter(url.pathname) || reverseFooter) {
+      const leavingProfile = isProfile(current) && url.pathname !== teamRoute;
+      const reverseScroll = isFooter(current) || leavingProfile;
+      if (isFooter(url.pathname) || reverseScroll) {
         const departure = current;
         const origin = footerReturn;
         const nextOrigin = historyChange ? history.state?.footerReturn || null
@@ -160,11 +166,10 @@
         const destination = await loadPage(url.pathname);
         const footerLink = (path) => [...document.querySelectorAll('footer [data-footer-link]')].find(link => new URL(link.href).pathname === path);
         await runFooterScroll({
-          reverse: reverseFooter, reducedMotion,
+          reverse: reverseScroll, reducedMotion,
           update: () => {
             cleanupVideo();
             document.querySelector('main').replaceWith(destination.main.cloneNode(true));
-            document.querySelector('footer').replaceWith(destination.footer.cloneNode(true));
             document.title = destination.title;
             current = url.pathname;
             footerReturn = isFooter(current) ? nextOrigin : null;
@@ -322,7 +327,6 @@
       // Move the already decoded destination into place; never clone it again.
       destinationMain.style.removeProperty('transform');
       document.querySelector('main').replaceWith(destinationMain);
-      document.querySelector('footer').replaceWith(destination.footer.cloneNode(true));
       document.title = destination.title;
       current = url.pathname;
       footerReturn = null;
