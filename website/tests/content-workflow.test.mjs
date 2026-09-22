@@ -62,7 +62,8 @@ test('Markdown updates drive the real static build', async t => {
       assert.match(contacts, /data-footer-back/);
       for (const id of ['research','team','publications','lab-tour','opportunities','contact']) {
         const route = await readFile(join(fixture, `dist/${id}/index.html`), 'utf8');
-        assert.equal(/<footer hidden(?:[ >])/.test(route), id === 'contact');
+        const routeFooter = route.match(/<footer>[\s\S]*?<\/footer>/)?.[0];
+        assert.equal(routeFooter?.replace(/ aria-current="page"/g, ''), footer);
         assert.match(route, new RegExp(`href="/test-repository/${id}/" aria-current="page"`));
         assert.equal((route.match(/<h1[ >]/g) || []).length, 1);
       }
@@ -112,6 +113,8 @@ test('Markdown updates drive the real static build', async t => {
       assert.doesNotMatch(html, /<strong>solar fuels<\/strong>/);
       assert.match(html, /href="\/test-repository\/team\/test-member\/"/);
       const profile = await readFile(join(fixture, 'dist/team/test-member/index.html'), 'utf8');
+      const home = await readFile(join(fixture, 'dist/index.html'), 'utf8');
+      assert.equal(profile.match(/<footer>[\s\S]*?<\/footer>/)?.[0], home.match(/<footer>[\s\S]*?<\/footer>/)?.[0]);
       assert.match(profile, /<strong>solar fuels<\/strong>/);
       assert.match(profile, /href="https:\/\/example.org\/member-thesis"/);
       assert.match(profile, /href="\/test-repository\/team\/"/);
