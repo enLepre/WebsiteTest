@@ -141,7 +141,6 @@ body{min-height:100vh;display:flex;flex-direction:column}main{flex:1}main:focus{
 }
 
 /* Justify prose consistently on desktop and mobile. */
-.home-quote p,
 .research-grid p,
 .research-details :is(p, li),
 .profile-biography :is(p, li),
