@@ -131,8 +131,8 @@ const alumni = people.filter(p => p.data.status === 'alumni');
             }))}
           </div></div>;
         }))}
-          <section class="group-history" aria-labelledby="group-history-title">
-            <h3 id="group-history-title">Previous group photos</h3>
+          <details class="group-history">
+            <summary>Previous group photos</summary>
             {[
               {year: 2024, width: 1800, height: 779},
               {year: 2022, width: 1800, height: 1200},
@@ -140,7 +140,7 @@ const alumni = people.filter(p => p.data.status === 'alumni');
               <figcaption>{photo.year}</figcaption>
               <img src={asset(`media/group-${photo.year}-display.webp`)} alt={`Tilley Research Group in ${photo.year}`} width={photo.width} height={photo.height} loading="lazy" decoding="async" />
             </figure>)}
-          </section>
+          </details>
         {alumni.length > 0 && <details><summary>Alumni</summary>
           <div class="alumni-columns">{roles.map(([role, label]) => {
             const members = alumni.filter(p => p.data.role === role);
