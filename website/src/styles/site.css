@@ -74,13 +74,13 @@ body{min-height:100vh;display:flex;flex-direction:column}main{flex:1}main:focus{
 #team .leader-group .member img{aspect-ratio:4/5}
 #team .leader-group .leader-no-photo{grid-template-columns:1fr}
 #team .leader-group .leader-no-photo .leader-info{grid-column:1}
-.leader-info{min-width:0}
-.leader-info h2{font:clamp(30px,3.8vw,44px)/1.2 Georgia,serif;margin:0 0 22px}
-.leader-biography h3,.leader-contact h3{font-size:14px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);margin:28px 0 12px}
+.leader-info{min-width:0;font-size:15px}
+.leader-info h2{font:32px/1.2 Georgia,serif;margin:0 0 22px}
+.leader-biography h3,.leader-contact h3{font-size:13px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:#000;margin:28px 0 12px}
 .leader-biography h3:first-child{margin-top:0}
-.leader-contact .contact-link{font-size:16px}
+.leader-contact .contact-link{font-size:15px}
 .leader-contact p{margin:0}
-@media(max-width:700px){#team .leader-group .member{grid-template-columns:1fr;gap:28px}#team .leader-group .member-photo{max-width:360px}#team .leader-group .leader-info{grid-column:1;grid-row:2}#team .leader-group .leader-no-photo .leader-info{grid-row:1}.leader-info h2{font-size:32px}}
+@media(max-width:700px){#team .leader-group .member{grid-template-columns:1fr;gap:28px}#team .leader-group .member-photo{max-width:360px}#team .leader-group .leader-info{grid-column:1;grid-row:2}#team .leader-group .leader-no-photo .leader-info{grid-row:1}.leader-info h2{font-size:28px}}
 .member-photo img{transition:filter .15s ease}.member-photo:hover img{filter:brightness(.95)}
 .profile-back{display:inline-block;margin-bottom:32px}.profile-layout{display:grid;grid-template-columns:minmax(220px,320px) minmax(0,1fr);gap:52px;align-items:start}.profile-no-photo{grid-template-columns:1fr}
 .profile-portrait{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;object-position:center top;border-radius:5px}.profile-info h1{font:clamp(30px,4vw,44px)/1.2 Georgia,serif;margin:0 0 12px;max-width:none}.profile-role{color:var(--muted);margin-bottom:28px}.profile-biography{max-width:700px;color:var(--muted)}.profile-biography strong{color:var(--ink)}.profile-biography p{margin-bottom:18px}
@@ -144,6 +144,7 @@ body{min-height:100vh;display:flex;flex-direction:column}main{flex:1}main:focus{
 .research-grid p,
 .research-details :is(p, li),
 .profile-biography :is(p, li),
+.leader-biography :is(p, li),
 .news-feed :is(p, li),
 .news-highlights p,
 .section-head p,
