@@ -4,7 +4,9 @@ header nav a { white-space: nowrap; }
   header .bar { flex-wrap: wrap; padding-top: 15px; padding-bottom: 15px; gap: 12px; }
   header nav { flex-wrap: wrap; }
 }
-.lab-tour-heading { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+.lab-tour-intro { display: grid; grid-template-columns: minmax(0, 710px) minmax(120px, 1fr); gap: 32px; align-items: center; }
+.lab-tour-copy > :last-child { margin-bottom: 0; }
+.spark-certificate-link { justify-self: center; }
 .spark-badge { display: block; width: 76px; height: auto; flex-shrink: 0; }
 .lab-tour .section-head p a { color: var(--blue); text-decoration: underline; text-underline-offset: 4px; }
 .equipment-section { margin-top: 52px; }
@@ -19,6 +21,7 @@ header nav a { white-space: nowrap; }
 .shared-facilities a { color: var(--blue); text-decoration: underline; text-underline-offset: 4px; }
 @media (max-width: 850px) { .equipment-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) {
+  .lab-tour-intro { grid-template-columns: minmax(0, 1fr); gap: 24px; }
   .equipment-grid, .shared-facilities ul { grid-template-columns: 1fr; }
   .equipment-section { margin-top: 36px; }
   .shared-facilities { margin-top: 44px; }
