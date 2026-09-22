@@ -2,4 +2,4 @@
 title: "Research"
 ---
 
-We develop semiconductor and electrode materials for solar fuels and organic electrosynthesis.
+We study electrochemistry and interfaces to solve the next generation problems
