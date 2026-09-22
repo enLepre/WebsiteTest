@@ -33,6 +33,7 @@ export const collections = {
       roleLabel: z.string().optional(),
       thesis: z.union([z.literal(''), z.string().url().refine(value => /^https?:\/\//.test(value), 'Use an HTTP or HTTPS thesis link')]).optional(),
       email: z.string().email().optional(),
+      office: z.string().optional(),
       ...common,
     }),
   }),

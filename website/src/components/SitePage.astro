@@ -104,14 +104,25 @@ const alumni = people.filter(p => p.data.status === 'alumni');
         </div>
       </div></section>}
       {page === 'team' && <>      <section class="content team" id="team"><div class="wrap">
-        <div class="section-head"><h1>The Team</h1></div>
+        <h1 class="sr-only">{team.title}</h1>
         <figure class="team-current-photo"><img src={asset('media/group-2025-display.webp')} alt="Tilley Research Group together outdoors in 2025" width="1600" height="1066" decoding="async" /></figure>
         <TeamBody />
         {await Promise.all(roles.map(async ([role, label]) => {
           const members = people.filter(p => p.data.role === role && p.data.status === 'current');
           if (!members.length) return null;
-          return <div class={role === 'group-leader' ? 'member-group leader-group' : 'member-group'}><h3>{label}</h3><div class="portrait-grid">
+          return <div class={role === 'group-leader' ? 'member-group leader-group' : 'member-group'}>{role !== 'group-leader' && <h3>{label}</h3>}<div class="portrait-grid">
             {await Promise.all(members.map(async person => {
+              if (role === 'group-leader') {
+                const { Content } = await render(person);
+                return <article class={`member leader-profile${person.data.photo ? '' : ' leader-no-photo'}`} data-person={person.id}>
+                  {person.data.photo && <a class="member-photo" href={pageUrl(`team/${person.id}`)} aria-label={`View ${person.data.name}’s profile`}><img src={asset(person.data.photo)} alt={person.data.name} width={person.data.photoWidth || 1200} height={person.data.photoHeight || 1200} loading="lazy" decoding="async" /></a>}
+                  <div class="leader-info">
+                    <h2><a href={pageUrl(`team/${person.id}`)}>{person.data.name}</a></h2>
+                    <div class="leader-biography"><Content /></div>
+                    {(person.data.email || person.data.office) && <div class="leader-contact"><h3>Contact</h3>{person.data.email && <a class="contact-link" href={`mailto:${person.data.email}`}>{person.data.email}</a>}{person.data.office && <p>Office: {person.data.office}</p>}</div>}
+                  </div>
+                </article>;
+              }
               return <article class="member" data-person={person.id}>
                 {person.data.photo && <a class="member-photo" href={pageUrl(`team/${person.id}`)} aria-label={`View ${person.data.name}’s profile`}><img src={asset(person.data.thumbnail || person.data.photo)} alt={person.data.name} width={person.data.thumbnailWidth || person.data.photoWidth || 320} height={person.data.thumbnailHeight || person.data.photoHeight || 400} loading="lazy" decoding="async" /></a>}
                 <h4><a href={pageUrl(`team/${person.id}`)}>{person.data.name}</a></h4>{person.data.roleLabel && <p class="member-role">{person.data.roleLabel}</p>}

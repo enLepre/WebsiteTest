@@ -67,8 +67,18 @@ body{min-height:100vh;display:flex;flex-direction:column}main{flex:1}main:focus{
 
 /* Member directory links to individual biographies. */
 .member-photo{display:block;width:160px;max-width:100%;margin:0 auto 14px}
-#team .leader-group .member{display:block;max-width:360px;text-align:center}
-#team .leader-group .member-photo{width:360px;max-width:100%}
+#team .leader-group .portrait-grid{display:block}
+#team .leader-group .member{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.85fr);gap:52px;align-items:start;max-width:none;text-align:left}
+#team .leader-group .member-photo{width:100%;max-width:100%;margin:0}
+#team .leader-group .member img{aspect-ratio:4/5}
+#team .leader-group .leader-no-photo{grid-template-columns:1fr}
+.leader-info{min-width:0}
+.leader-info h2{font:clamp(30px,3.8vw,44px)/1.2 Georgia,serif;margin:0 0 22px}
+.leader-biography h3,.leader-contact h3{font-size:14px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);margin:28px 0 12px}
+.leader-biography h3:first-child{margin-top:0}
+.leader-contact .contact-link{font-size:16px}
+.leader-contact p{margin:0}
+@media(max-width:700px){#team .leader-group .member{grid-template-columns:1fr;gap:28px}#team .leader-group .member-photo{max-width:360px}.leader-info h2{font-size:32px}}
 .member-photo img{transition:filter .15s ease}.member-photo:hover img{filter:brightness(.95)}
 .profile-back{display:inline-block;margin-bottom:32px}.profile-layout{display:grid;grid-template-columns:minmax(220px,320px) minmax(0,1fr);gap:52px;align-items:start}.profile-no-photo{grid-template-columns:1fr}
 .profile-portrait{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:cover;object-position:center top;border-radius:5px}.profile-info h1{font:clamp(30px,4vw,44px)/1.2 Georgia,serif;margin:0 0 12px;max-width:none}.profile-role{color:var(--muted);margin-bottom:28px}.profile-biography{max-width:700px;color:var(--muted)}.profile-biography strong{color:var(--ink)}.profile-biography p{margin-bottom:18px}
@@ -93,7 +103,7 @@ body{min-height:100vh;display:flex;flex-direction:column}main{flex:1}main:focus{
 #team .alumni-columns .alumni-list{display:flex;flex-direction:column;align-items:center;gap:10px;margin:0}
 #team .alumni-columns .alumni-list li{width:100%;text-align:center;overflow-wrap:anywhere}
 #team .alumni-columns .alumni-group h4{font:22px/1.3 Georgia,serif;margin:24px 0;min-height:2.6em;display:flex;align-items:center;justify-content:center}
-.team-current-photo{margin:0 auto 40px;max-width:900px}
+.team-current-photo{margin:0 0 40px;width:100%}
 .team-current-photo img{display:block;width:100%;height:auto;border-radius:5px}
 .group-history{margin:64px auto 0;max-width:900px;text-align:center}
 .group-history>h3{font:30px/1.2 Georgia,serif;margin:0 0 32px}
