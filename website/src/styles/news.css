@@ -1,5 +1,6 @@
-.news-post { max-width: 760px; overflow-wrap: anywhere; }
+.news-post { max-width: none; overflow-wrap: anywhere; }
 .news-post h1 { max-width: none; }
+.news-post-summary, .news-post-body { max-width: 760px; }
 .news-post-summary { color: var(--muted); font-size: 19px; margin-bottom: 32px; }
 .news-post-body p, .news-post-body li { color: var(--muted); }
 .news-post-body h2 { font-size: 28px; margin: 32px 0 16px; }
