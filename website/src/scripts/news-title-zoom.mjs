@@ -11,7 +11,11 @@ export async function runNewsTitleZoom({ source, target, destinationMain, header
   // Cover the departing page; only the moving title is visible during the zoom.
   overlay.style.background = '#fff';
   const animations = [];
-  const finish = () => animations.forEach(animation => animation.finish());
+  let interrupted = false;
+  const finish = () => {
+    interrupted = true;
+    animations.forEach(animation => animation.finish());
+  };
   const sourceVisibility = source.style.visibility;
   const targetVisibility = target.style.visibility;
   const destinationOpacity = destinationMain.style.opacity;
@@ -63,6 +67,15 @@ export async function runNewsTitleZoom({ source, target, destinationMain, header
     reducedMotion.addEventListener('change', finish);
     window.addEventListener('resize', finish);
     await Promise.all(animations.map(animation => animation.finished));
+    // Keep the settled title visible while the rest of the prepared page fades in.
+    // Start only after the zoom, so incoming text never crosses the moving title.
+    if (!interrupted && !reducedMotion.matches) {
+      const reveal = destinationMain.animate([{ opacity: 0 }, { opacity: 1 }], {
+        duration: 320, easing: 'ease-out', fill: 'both',
+      });
+      animations.push(reveal);
+      await reveal.finished;
+    }
     return scrollY;
   } finally {
     clearTimeout(timer);

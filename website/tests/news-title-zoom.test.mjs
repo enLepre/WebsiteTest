@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { runInNewContext } from 'node:vm';
 
 const script = readFileSync(new URL('../src/scripts/news-title-zoom.mjs', import.meta.url), 'utf8').replace('export async function', 'async function');
-async function fixture({ returning = false, reduced = false, absent = false, fail = false, interrupt = false, ready = true } = {}) {
+async function fixture({ returning = false, reduced = false, absent = false, fail = false, failReveal = false, interrupt = false, ready = true } = {}) {
   const animations = [], elements = [], listeners = new Map();
   let sourceScrolled = false;
   const source = element('source', { left: 60, top: returning ? -400 : 200, bottom: returning ? -340 : 230, width: returning ? 700 : 350, height: 60 });
@@ -18,9 +18,11 @@ async function fixture({ returning = false, reduced = false, absent = false, fai
       animate(frames, options) {
         const cover = elements.find(item => item.className?.includes('news-journey'));
         const item = { kind, frames, options,
+          previousAnimationsCompleted: animations.every(animation => animation.completed),
           duringMotion: { incomingOpacity: main.style.opacity, outgoingCover: cover?.style.background, coverVisibility: cover?.style.visibility },
           cancel() { this.cancelled = true; }, finish() { this.finishedEarly = true; this.resolve?.(); } };
-        item.finished = fail ? Promise.reject(new Error('animation interrupted')) : interrupt ? new Promise(resolve => { item.resolve = resolve; }) : Promise.resolve();
+        item.finished = (fail || (failReveal && kind === 'main')) ? Promise.reject(new Error('animation interrupted')) : interrupt ? new Promise(resolve => { item.resolve = resolve; }) : Promise.resolve();
+        item.finished = item.finished.then(() => { item.completed = true; });
         animations.push(item); return item;
       },
     };
@@ -34,7 +36,7 @@ async function fixture({ returning = false, reduced = false, absent = false, fai
   runInNewContext(script + '\nthis.zoom = runNewsTitleZoom;', context);
   const operation = context.zoom({ source: absent ? null : source, target, destinationMain: main, header: { getBoundingClientRect: () => ({ bottom: 80 }) }, reducedMotion: motion, scrollY: 0, returning, prepareMedia: async () => { if (!ready) motion.matches = true; } });
   let scroll;
-  if (fail) await assert.rejects(operation, /animation interrupted/);
+  if (fail || failReveal) await assert.rejects(operation, /animation interrupted/);
   else scroll = await operation;
   assert.equal(source.style.visibility, undefined);
   assert.equal(target.style.visibility, undefined);
@@ -68,5 +70,19 @@ test('opening and returning show only the title until the zoom completes', async
 test('reduced motion and missing homepage titles skip the zoom', async () => {
   for (const options of [{ reduced: true }, { absent: true }, { ready: false }]) assert.equal((await fixture(options)).animations.length, 0);
 });
+test('article and listing text fade in only after the title has finished zooming', async () => {
+  for (const returning of [false, true]) {
+    const result = await fixture({ returning });
+    assert.equal(result.animations.length, 2);
+    const reveal = result.animations[1];
+    assert.equal(reveal.kind, 'main');
+    assert.equal(reveal.previousAnimationsCompleted, true);
+    assert.equal(reveal.frames[0].opacity, 0);
+    assert.equal(reveal.frames[1].opacity, 1);
+    assert.equal(reveal.options.duration, 320);
+    assert.equal(reveal.duringMotion.outgoingCover, '#fff');
+  }
+});
 test('resize finishes the title animation and removes temporary elements', async () => { await fixture({ interrupt: true }); });
 test('animation failure restores both titles and cleans up the overlay', async () => { await fixture({ fail: true }); });
+test('a failed text reveal also restores the page and cleans up', async () => { await fixture({ failReveal: true }); });
