@@ -59,6 +59,10 @@ Keep one record per person, updating their role/status instead of copying them i
 
 Change only `status: current` to `status: alumni`. Keep their role, file, and photo. After the next successful build, they leave the current-member grid and appear in the Alumni list under their former role. Alumni photos and biographies are retained in the source but not shown in this compact list. Restoring `status: current` brings the profile back.
 
+### News posts
+
+Copy `templates/news.md` to `content/news/YYYY-MM-DD-short-title.md`, fill in the title, date and summary, and write the full article below the second `---`. Set `draft: false` when ready. Each published file creates a page at `news/YYYY-MM-DD-short-title/`; the News page lists all posts newest first, and the homepage highlights link to the latest three. Both show summaries; the full text appears on the individual page. Keep filenames stable to preserve links. Draft posts have no public page. The offline exporter includes article pages automatically.
+
 ### Publications and research
 
 Publications can also receive additive Crossref updates matched by David's ORCID. The original Markdown entries are preserved. See [PUBLICATION-UPDATES.md](PUBLICATION-UPDATES.md) for the weekly workflow, limitations, and the one-switch rollback to the manual-only list.

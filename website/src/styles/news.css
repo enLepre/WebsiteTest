@@ -1,0 +1,9 @@
+.news-post { max-width: 760px; overflow-wrap: anywhere; }
+.news-post h1 { max-width: none; }
+.news-post-summary { color: var(--muted); font-size: 19px; margin-bottom: 32px; }
+.news-post-body p, .news-post-body li { color: var(--muted); }
+.news-post-body h2 { font-size: 28px; margin: 32px 0 16px; }
+.news-post-body h3 { margin-top: 24px; }
+.news-post-body a { color: var(--blue); text-decoration: underline; text-underline-offset: 4px; }
+.news-post-body img { max-width: 100%; height: auto; }
+.news-post-body pre { overflow-x: auto; }

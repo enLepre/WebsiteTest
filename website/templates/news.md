@@ -11,4 +11,6 @@ order: 100
 draft: true
 ---
 
-Write the full news item here. You can use **bold text**, lists, and [links](https://example.org).
+Write the full news item here. It appears on its own page at news/YYYY-MM-DD-short-title/.
+The homepage and News page show only the summary and link to this page.
+You can use **bold text**, lists, and [links](https://example.org).

@@ -6,6 +6,7 @@ import '../styles/site.css';
 import '../styles/lab-tour.css';
 import '../styles/hero-video.css';
 import '../styles/footer-scroll.css';
+import '../styles/news.css';
 import navigationScript from '../scripts/navigation.js?raw';
 import externalLinksScript from '../scripts/external-links.js?raw';
 import footerScrollScript from '../scripts/footer-scroll.mjs?raw';
@@ -15,8 +16,9 @@ import importedPublications from '../data/publications-auto.json';
 import { mergePublications } from '../lib/publications.mjs';
 import { externalLinkAttributes } from '../lib/external-links.mjs';
 const externalLink = (href: string) => externalLinkAttributes(href, Astro.site);
-const { page = 'home', person: profile } = Astro.props;
+const { page = 'home', person: profile, post } = Astro.props;
 const ProfileContent = profile ? (await render(profile)).Content : null;
+const PostContent = post ? (await render(post)).Content : null;
 const pageUrl = (id: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/${id === 'home' ? '' : id + '/'}`;
 
 const asset = (path: string) => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/${path}`;
@@ -67,8 +69,8 @@ const alumni = people.filter(p => p.data.status === 'alumni');
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Tilley Research Group at the University of Zurich. Solar fuels, electrosynthesis, and materials chemistry." />
-    <title>{page === 'home' ? contact.title : page === 'person' ? `${profile.data.name} | ${contact.title}` : `${({research: science.title, team: team.title, news: newsSection.title, publications: papers.title, 'lab-tour': labTour.title, opportunities: opportunities.title, contact: 'Contacts'})[page]} | ${contact.title}`}</title>
+    <meta name="description" content={post ? post.data.summary : 'Tilley Research Group at the University of Zurich. Solar fuels, electrosynthesis, and materials chemistry.'} />
+    <title>{page === 'home' ? contact.title : page === 'news-post' ? `${post.data.title} | ${contact.title}` : page === 'person' ? `${profile.data.name} | ${contact.title}` : `${({research: science.title, team: team.title, news: newsSection.title, publications: papers.title, 'lab-tour': labTour.title, opportunities: opportunities.title, contact: 'Contacts'})[page]} | ${contact.title}`}</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%23202125'/%3E%3Ctext x='7' y='24' fill='white' font-family='Georgia' font-size='25'%3ET%3C/text%3E%3C/svg%3E" />
   </head>
   <body id="top">
@@ -76,7 +78,7 @@ const alumni = people.filter(p => p.data.status === 'alumni');
     <header><div class="wrap bar">
       <a class="brand" href={pageUrl('home')}>{contact.title}</a>
       <nav aria-label="Main navigation">
-        {[['home','Home'],['team',team.title],['research',science.title],['publications',papers.title],['lab-tour',labTour.title],['news',newsSection.title]].map(([id,label]) => <a href={pageUrl(id)} aria-current={page === id || (page === 'person' && id === 'team') ? 'page' : undefined}>{label}</a>)}
+        {[['home','Home'],['team',team.title],['research',science.title],['publications',papers.title],['lab-tour',labTour.title],['news',newsSection.title]].map(([id,label]) => <a href={pageUrl(id)} aria-current={page === id || (page === 'person' && id === 'team') ? 'page' : (page === 'news-post' && id === 'news') ? 'location' : undefined}>{label}</a>)}
       </nav>
     </div></header>
     <main id="content" tabindex="-1">
@@ -201,10 +203,28 @@ const alumni = people.filter(p => p.data.status === 'alumni');
       </div></section></>}
       {page === 'contact' && <section class="content"><div class="wrap"><a class="footer-back contact-link" data-footer-back href={pageUrl('home')}>← Back</a><div class="section-head section-head-stacked"><h1><span data-footer-title>Contacts</span></h1><div><h3>{contact.title}</h3><ContactBody />{contact.email && <p><a class="contact-link" href={`mailto:${contact.email}`}>{contact.email}</a></p>}<p>{contact.phone}</p></div></div></div></section>}
       {page === 'home' && <>
-        <section class="content" id="highlights"><div class="wrap"><div class="section-head"><h2>Highlights</h2></div><div class="news-highlights">{news.slice(0,3).map(entry => <article><div class="news-meta"><time datetime={entry.data.date}>{formatDate(entry.data.date)}</time>{entry.data.sample && <span>Sample news</span>}</div><h4><a href={pageUrl('news')}>{entry.data.title}</a></h4><p>{entry.data.summary}</p></article>)}</div><a class="summary-link" href={pageUrl('news')}>All news →</a></div></section>
+        <section class="content" id="highlights"><div class="wrap"><div class="section-head"><h2>Highlights</h2></div><div class="news-highlights">{news.slice(0,3).map(entry => <article><div class="news-meta"><time datetime={entry.data.date}>{formatDate(entry.data.date)}</time>{entry.data.sample && <span>Sample news</span>}</div><h4><a href={pageUrl(`news/${entry.id}`)}>{entry.data.title}</a></h4><p>{entry.data.summary}</p></article>)}</div><a class="summary-link" href={pageUrl('news')}>All news →</a></div></section>
 
       </>}
-      {page === 'news' && <section class="content"><div class="wrap"><div class="section-head"><h1>{newsSection.title}</h1><div><NewsBody /></div></div><div class="news-feed">{await Promise.all(news.map(async entry => {const { Content } = await render(entry); return <article><div class="news-meta"><time datetime={entry.data.date}>{formatDate(entry.data.date)}</time>{entry.data.sample && <span>Sample news</span>}</div><h2>{entry.data.title}</h2><p>{entry.data.summary}</p><Content /></article>;}))}{news.length === 0 && <p>No news yet.</p>}</div></div></section>}
+      {page === 'news' && <section class="content"><div class="wrap">
+        <div class="section-head"><h1>{newsSection.title}</h1><div><NewsBody /></div></div>
+        <div class="news-feed">{news.map(entry => <article>
+          <div class="news-meta"><time datetime={entry.data.date}>{formatDate(entry.data.date)}</time>{entry.data.sample && <span>Sample news</span>}</div>
+          <h2><a href={pageUrl(`news/${entry.id}`)}>{entry.data.title}</a></h2>
+          <p>{entry.data.summary}</p>
+          <a class="contact-link" href={pageUrl(`news/${entry.id}`)} aria-label={`Read more: ${entry.data.title}`}>Read more →</a>
+        </article>)}{news.length === 0 && <p>No news yet.</p>}</div>
+      </div></section>}
+
+      {page === 'news-post' && post && PostContent && <section class="content"><div class="wrap">
+        <a class="profile-back contact-link" href={pageUrl('news')}>← All news</a>
+        <article class="news-post">
+          <div class="news-meta"><time datetime={post.data.date}>{formatDate(post.data.date)}</time>{post.data.sample && <span>Sample news</span>}</div>
+          <h1>{post.data.title}</h1>
+          <p class="news-post-summary">{post.data.summary}</p>
+          <div class="news-post-body"><PostContent /></div>
+        </article>
+      </div></section>}
 
       {page === 'person' && profile && ProfileContent && <section class="content member-profile"><div class="wrap">
         <a class="profile-back contact-link" href={pageUrl('team')}>← Back to the team</a>

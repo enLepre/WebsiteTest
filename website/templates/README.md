@@ -40,6 +40,7 @@ When someone leaves, change `status: current` to `status: alumni` in their exist
 ## News, research and publications
 
 - News dates must be quoted valid dates such as `"2026-09-20"`. Newest news appears first; the latest three items supply homepage highlights. Use `sample: false` for actual news.
+- Each published news file creates its own page at `news/FILENAME/` (without `.md`). The News page and homepage highlights show the date, title and summary, linking to the full post. Write the article below the second `---`. Keep the filename unchanged to preserve shared links. Setting `draft: true` hides both the listing and the article page.
 - All published research topics appear on Research; the first three by `order` also appear on the homepage. `homeTitle` and `summary` provide their shorter homepage text. If omitted, the full title and body are used.
 - Publications require a title, year, journal and `https://doi.org/…` link. `authors` and the body note are optional. Replace the example DOI before publishing. The optional `number` field preserves curated numbering: when both compared entries have numbers, higher numbers sort first; otherwise year (newest first), order (lowest first), and filename determine their order. Do not assign arbitrary numbers. Manual entries override automatic imports of the same DOI, including when the manual entry is a draft.
 

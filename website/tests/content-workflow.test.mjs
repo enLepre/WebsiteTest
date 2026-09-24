@@ -24,6 +24,16 @@ test('Markdown updates drive the real static build', async t => {
       '---\nname: "Fixture Current"\nrole: postdoc\nstatus: "current"\nphoto: people/test.png\nthesis: ""\n---\n');
     await writeFile(join(fixture, 'content/people/test-alumni.md'),
       '---\nname: "Fixture Alumni"\nrole: postdoc\nstatus: alumni\nthesis: "https://example.org/alumni-thesis"\n---\n');
+    await rm(join(fixture, 'content/news'), { recursive: true });
+    await mkdir(join(fixture, 'content/news/archive'), { recursive: true });
+    for (const [id, title, date, draft] of [
+      ['latest', 'Latest fixture news', '2026-09-24', false],
+      ['archive/older', 'Older fixture news', '2026-09-20', false],
+      ['hidden', 'Unpublished fixture news', '2026-09-25', true],
+    ]) {
+      await writeFile(join(fixture, `content/news/${id}.md`),
+        `---\ntitle: "${title}"\ndate: "${date}"\nsummary: "Summary for ${title}"\ndraft: ${draft}\n---\n\nFull article with **unique news body**.\n`);
+    }
     function build() {
       return spawnSync(process.execPath, [join(root, 'node_modules/astro/bin/astro.mjs'), 'build'], {
         cwd: fixture,
@@ -75,6 +85,26 @@ test('Markdown updates drive the real static build', async t => {
       assert.match(tour, /Shared Facilities/);
       assert.match(html, /<li[^>]*data-person="test-alumni"/);
       assert.match(html, /href="https:\/\/example.org\/alumni-thesis"/);
+    });
+    await t.test('news summaries link to full articles, including nested posts, and drafts have no page', async () => {
+      const listing = await readFile(join(fixture, 'dist/news/index.html'), 'utf8');
+      const home = await readFile(join(fixture, 'dist/index.html'), 'utf8');
+      assert.ok(listing.indexOf('Latest fixture news') < listing.indexOf('Older fixture news'));
+      for (const html of [listing, home]) {
+        assert.match(html, /href="\/test-repository\/news\/latest\/"/);
+        assert.match(html, /href="\/test-repository\/news\/archive\/older\/"/);
+        assert.doesNotMatch(html, /unique news body|Unpublished fixture news/);
+      }
+      for (const id of ['latest', 'archive/older']) {
+        const article = await readFile(join(fixture, `dist/news/${id}/index.html`), 'utf8');
+        assert.match(article, /<strong>unique news body<\/strong>/);
+        assert.match(article, /href="\/test-repository\/news\/"[^>]*>← All news<\/a>/);
+        assert.match(article, /href="\/test-repository\/news\/" aria-current="location"/);
+        assert.equal((article.match(/<h1[ >]/g) || []).length, 1);
+        assert.match(article, /<meta name="description" content="Summary for /);
+        assert.match(article, /<title>(Latest|Older) fixture news \|/);
+      }
+      await assert.rejects(readFile(join(fixture, 'dist/news/hidden/index.html'), 'utf8'));
     });
     await t.test('automatic publications render and the off switch restores the manual page', async () => {
       const configPath = join(fixture, 'src/data/publication-sync.json');
