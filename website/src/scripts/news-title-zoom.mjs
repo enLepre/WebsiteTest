@@ -8,10 +8,13 @@ export async function runNewsTitleZoom({ source, target, destinationMain, header
   const top = header.getBoundingClientRect().bottom;
   overlay.style.top = top + 'px';
   overlay.style.visibility = 'hidden';
+  // Cover the departing page; only the moving title is visible during the zoom.
+  overlay.style.background = '#fff';
   const animations = [];
   const finish = () => animations.forEach(animation => animation.finish());
   const sourceVisibility = source.style.visibility;
   const targetVisibility = target.style.visibility;
+  const destinationOpacity = destinationMain.style.opacity;
   let timer;
   try {
     // The return link is below the article; bring its title back into view.
@@ -50,13 +53,12 @@ export async function runNewsTitleZoom({ source, target, destinationMain, header
     });
     source.style.visibility = 'hidden';
     target.style.visibility = 'hidden';
+    // Keep layout measurable without revealing the incoming article or listing.
+    destinationMain.style.opacity = '0';
     overlay.append(title);
     overlay.style.visibility = 'visible';
     animations.push(title.animate([frame(sourceRect, sourceStyle), frame(targetBounds, targetStyle)], {
       duration: 650, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'both',
-    }));
-    animations.push(destinationMain.animate([{ opacity: 0 }, { opacity: 1 }], {
-      duration: 400, delay: 120, fill: 'both',
     }));
     reducedMotion.addEventListener('change', finish);
     window.addEventListener('resize', finish);
@@ -69,6 +71,7 @@ export async function runNewsTitleZoom({ source, target, destinationMain, header
     animations.forEach(animation => animation.cancel());
     source.style.visibility = sourceVisibility;
     target.style.visibility = targetVisibility;
+    destinationMain.style.opacity = destinationOpacity;
     destinationMain.style.removeProperty('transform');
     overlay.remove();
   }

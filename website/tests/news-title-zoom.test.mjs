@@ -16,7 +16,10 @@ async function fixture({ returning = false, reduced = false, absent = false, fai
       getBoundingClientRect: () => rect, setAttribute() {}, append() {}, remove() { this.removed = true; },
       scrollIntoView() { sourceScrolled = true; rect.top = 200; rect.bottom = 260; },
       animate(frames, options) {
-        const item = { kind, frames, options, cancel() { this.cancelled = true; }, finish() { this.finishedEarly = true; this.resolve?.(); } };
+        const cover = elements.find(item => item.className?.includes('news-journey'));
+        const item = { kind, frames, options,
+          duringMotion: { incomingOpacity: main.style.opacity, outgoingCover: cover?.style.background, coverVisibility: cover?.style.visibility },
+          cancel() { this.cancelled = true; }, finish() { this.finishedEarly = true; this.resolve?.(); } };
         item.finished = fail ? Promise.reject(new Error('animation interrupted')) : interrupt ? new Promise(resolve => { item.resolve = resolve; }) : Promise.resolve();
         animations.push(item); return item;
       },
@@ -35,6 +38,7 @@ async function fixture({ returning = false, reduced = false, absent = false, fai
   else scroll = await operation;
   assert.equal(source.style.visibility, undefined);
   assert.equal(target.style.visibility, undefined);
+  assert.equal(main.style.opacity, undefined, 'destination content must be restored after the zoom');
   assert.equal(listeners.size, 0);
   assert.ok(animations.every(item => item.cancelled));
   assert.ok(elements.filter(item => item.className?.includes('news-journey')).every(item => item.removed));
@@ -51,6 +55,15 @@ test('returning reveals an offscreen article title and shrinks it into the listi
   assert.ok(result.scroll > 0);
   assert.equal(result.animations[0].frames[0].fontSize, '54px');
   assert.equal(result.animations[0].frames[1].fontSize, '27px');
+});
+test('opening and returning show only the title until the zoom completes', async () => {
+  for (const returning of [false, true]) {
+    const result = await fixture({ returning, interrupt: true });
+    assert.equal(result.animations.length, 1, 'page content must not fade in during the title zoom');
+    assert.deepEqual(result.animations[0].duringMotion, {
+      incomingOpacity: '0', outgoingCover: '#fff', coverVisibility: 'visible',
+    });
+  }
 });
 test('reduced motion and missing homepage titles skip the zoom', async () => {
   for (const options of [{ reduced: true }, { absent: true }, { ready: false }]) assert.equal((await fixture(options)).animations.length, 0);
