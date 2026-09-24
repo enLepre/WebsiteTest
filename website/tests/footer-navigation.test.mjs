@@ -6,7 +6,7 @@ import { runInNewContext } from 'node:vm';
 test('footer links, Back, browser Back/Forward, and nested footer visits restore the right page', async () => {
   const base = 'https://example.org';
   const home = '/site/', contacts = '/site/contact/', opportunities = '/site/opportunities/';
-  const listeners = {}, windowListeners = {}, transitions = [], fallbacks = [];
+  const listeners = {}, windowListeners = {}, transitions = [], fallbacks = [], newsZooms = [];
   const link = (path, text, attributes = []) => ({ _href: base + path,
     get href() { return this._href; }, set href(value) { this._href = new URL(value, base).href; }, textContent: text, target: '',
     hasAttribute: name => attributes.includes(name), setAttribute() {}, removeAttribute() {},
@@ -16,7 +16,7 @@ test('footer links, Back, browser Back/Forward, and nested footer visits restore
     replaceWith(node) { document.main = node; } });
   const footer = () => ({ links: [link(opportunities, 'Opportunities', ['data-footer-link']), link(contacts, 'Contacts', ['data-footer-link'])],
     cloneNode: footer, replaceWith(node) { document.footer = node; } });
-  const headerLinks = [link(home, 'Home'), link('/site/team/', 'Team'), link('/site/publications/', 'Publications'), link('/site/research/', 'Research')];
+  const headerLinks = [link(home, 'Home'), link('/site/team/', 'Team'), link('/site/publications/', 'Publications'), link('/site/research/', 'Research'), link('/site/news/', 'News')];
   const header = { querySelectorAll: () => headerLinks, getBoundingClientRect: () => ({ height: 80 }), setAttribute() {}, removeAttribute() {} };
   const location = { href: base + home, pathname: home, protocol: 'https:', origin: base,
     assign: url => fallbacks.push(url), reload: () => fallbacks.push('reload') };
@@ -62,6 +62,7 @@ test('footer links, Back, browser Back/Forward, and nested footer visits restore
       options.update();
       transitions.push({ reverse: options.reverse });
     },
+    runNewsTitleZoom: async options => { newsZooms.push(options); return options.scrollY; },
   });
   const settle = () => new Promise(resolve => setImmediate(resolve));
   const sharedFooter = document.footer;
@@ -132,5 +133,42 @@ test('footer links, Back, browser Back/Forward, and nested footer visits restore
   await click(headerLinks[1]);
   assert.equal(location.pathname, '/site/team/');
   assert.equal(transitions.length, count, 'Team must retain its separate portrait transition');
+  const news = link('/site/news/', 'News');
+  const article = link('/site/news/archive/example/', 'Article');
+  await click(news);
+  window.scrollY = 440;
+  motion.matches = false;
+  await click(article);
+  assert.equal(location.pathname, '/site/news/archive/example/');
+  assert.equal(newsZooms.at(-1).returning, false);
+  history.back(); await settle();
+  assert.equal(location.pathname, '/site/news/');
+  assert.equal(newsZooms.at(-1).returning, true);
+  assert.equal(window.scrollY, 440);
+  history.forward(); await settle();
+  assert.equal(newsZooms.at(-1).returning, false);
+  await click(news);
+  assert.equal(newsZooms.at(-1).returning, true);
+  motion.matches = true;
+  await click(headerLinks[0]);
+  window.scrollY = 900;
+  await click(article);
+  await click(headerLinks[0]);
+  assert.equal(newsZooms.at(-1).returning, true);
+  assert.equal(window.scrollY, 900);
+  // Other sections must use the same reverse scroll as profile departures.
+  for (const target of [...headerLinks.slice(1, 4), ...sharedFooter.links]) {
+    motion.matches = true;
+    await click(news);
+    await click(article);
+    motion.matches = false;
+    const before = transitions.length;
+    const zoomCount = newsZooms.length;
+    await click(target);
+    assert.equal(location.pathname, new URL(target.href).pathname);
+    assert.equal(transitions.length, before + 1);
+    assert.equal(transitions.at(-1).reverse, true);
+    assert.equal(newsZooms.length, zoomCount);
+  }
   assert.deepEqual(fallbacks, []);
 });

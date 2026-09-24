@@ -8,6 +8,7 @@ import '../styles/hero-video.css';
 import '../styles/footer-scroll.css';
 import '../styles/news.css';
 import navigationScript from '../scripts/navigation.js?raw';
+import newsTitleZoomScript from '../scripts/news-title-zoom.mjs?raw';
 import externalLinksScript from '../scripts/external-links.js?raw';
 import footerScrollScript from '../scripts/footer-scroll.mjs?raw';
 import heroVideoScript from '../scripts/hero-video.mjs?raw';
@@ -203,26 +204,26 @@ const alumni = people.filter(p => p.data.status === 'alumni');
       </div></section></>}
       {page === 'contact' && <section class="content"><div class="wrap"><a class="footer-back contact-link" data-footer-back href={pageUrl('home')}>← Back</a><div class="section-head section-head-stacked"><h1><span data-footer-title>Contacts</span></h1><div><h3>{contact.title}</h3><ContactBody />{contact.email && <p><a class="contact-link" href={`mailto:${contact.email}`}>{contact.email}</a></p>}<p>{contact.phone}</p></div></div></div></section>}
       {page === 'home' && <>
-        <section class="content" id="highlights"><div class="wrap"><div class="section-head"><h2>Highlights</h2></div><div class="news-highlights">{news.slice(0,3).map(entry => <article><div class="news-meta"><time datetime={entry.data.date}>{formatDate(entry.data.date)}</time>{entry.data.sample && <span>Sample news</span>}</div><h4><a href={pageUrl(`news/${entry.id}`)}>{entry.data.title}</a></h4><p>{entry.data.summary}</p></article>)}</div><a class="summary-link" href={pageUrl('news')}>All news →</a></div></section>
+        <section class="content" id="highlights"><div class="wrap"><div class="section-head"><h2>Highlights</h2></div><div class="news-highlights">{news.slice(0,3).map(entry => <article><div class="news-meta"><time datetime={entry.data.date}>{formatDate(entry.data.date)}</time>{entry.data.sample && <span>Sample news</span>}</div><h4><a data-news-title href={pageUrl(`news/${entry.id}`)}>{entry.data.title}</a></h4><p>{entry.data.summary}</p></article>)}</div><a class="summary-link" href={pageUrl('news')}>All news →</a></div></section>
 
       </>}
       {page === 'news' && <section class="content"><div class="wrap">
         <div class="section-head"><h1>{newsSection.title}</h1><div><NewsBody /></div></div>
         <div class="news-feed">{news.map(entry => <article>
           <div class="news-meta"><time datetime={entry.data.date}>{formatDate(entry.data.date)}</time>{entry.data.sample && <span>Sample news</span>}</div>
-          <h2><a href={pageUrl(`news/${entry.id}`)}>{entry.data.title}</a></h2>
+          <h2><a data-news-title href={pageUrl(`news/${entry.id}`)}>{entry.data.title}</a></h2>
           <p>{entry.data.summary}</p>
           <a class="contact-link" href={pageUrl(`news/${entry.id}`)} aria-label={`Read more: ${entry.data.title}`}>Read more →</a>
         </article>)}{news.length === 0 && <p>No news yet.</p>}</div>
       </div></section>}
 
       {page === 'news-post' && post && PostContent && <section class="content"><div class="wrap">
-        <a class="profile-back contact-link" href={pageUrl('news')}>← All news</a>
         <article class="news-post">
           <div class="news-meta"><time datetime={post.data.date}>{formatDate(post.data.date)}</time>{post.data.sample && <span>Sample news</span>}</div>
-          <h1>{post.data.title}</h1>
+          <h1 data-news-heading>{post.data.title}</h1>
           <p class="news-post-summary">{post.data.summary}</p>
           <div class="news-post-body"><PostContent /></div>
+          <a class="summary-link news-back" href={pageUrl('news')}>← All news</a>
         </article>
       </div></section>}
 
@@ -240,6 +241,6 @@ const alumni = people.filter(p => p.data.status === 'alumni');
     <footer><div class="wrap"><div class="footer"><div class="footer-identity"><a class="brand" href={pageUrl('home')}>{contact.title}</a><p class="footer-address">University of Zurich<br />Winterthurerstrasse 190 · 8057 Zurich, Switzerland</p></div><nav class="footer-links" aria-label="Footer navigation"><a class="contact-link" data-footer-link href={pageUrl('opportunities')} aria-current={page === 'opportunities' ? 'page' : undefined}>Opportunities</a><a class="contact-link" data-footer-link href={pageUrl('contact')} aria-current={page === 'contact' ? 'page' : undefined}>Contacts</a><a class="contact-link" href={pageUrl('home')}>Home</a><a class="contact-link" href="#top">Back to top ↑</a></nav></div>{contact.note && <div class="note">{contact.note}</div>}</div></footer>
     <script is:inline set:html={externalLinksScript}></script>
     <script is:inline set:html={footerScrollScript.replaceAll('export async function', 'async function')}></script>
-    <script is:inline set:html={heroVideoScript.replace('export function', 'function') + '\n' + navigationScript}></script>
+    <script is:inline set:html={heroVideoScript.replace('export function', 'function') + '\n' + newsTitleZoomScript.replace('export async function', 'async function') + '\n' + navigationScript}></script>
   </body>
 </html>

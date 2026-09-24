@@ -103,6 +103,8 @@ test('Markdown updates drive the real static build', async t => {
         assert.equal((article.match(/<h1[ >]/g) || []).length, 1);
         assert.match(article, /<meta name="description" content="Summary for /);
         assert.match(article, /<title>(Latest|Older) fixture news \|/);
+        assert.ok(article.indexOf('class="news-post-body"') < article.indexOf('class="summary-link news-back"'));
+        assert.match(article, /<h1 data-news-heading/);
       }
       await assert.rejects(readFile(join(fixture, 'dist/news/hidden/index.html'), 'utf8'));
     });

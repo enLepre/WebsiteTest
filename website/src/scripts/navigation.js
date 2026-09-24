@@ -8,8 +8,17 @@
   const isFooter = path => footerRoutes.includes(path);
   const teamRoute = routes[1];
   const isProfile = path => path.startsWith(teamRoute) && /^[^/]+\/$/.test(path.slice(teamRoute.length));
-  const routeIndex = path => isProfile(path) ? 1.5 : routes.indexOf(path);
-  const canNavigate = path => routes.includes(path) || isProfile(path) || isFooter(path);
+  const newsRoute = routes.find(path => path.endsWith('/news/'));
+  const isNewsPost = path => Boolean(newsRoute && path.startsWith(newsRoute) && path !== newsRoute);
+  const isNewsListing = path => path === newsRoute || path === routes[0];
+  const routeIndex = path => isProfile(path) ? 1.5 : isNewsPost(path) ? routes.indexOf(newsRoute) + 0.5 : routes.indexOf(path);
+  const canNavigate = path => routes.includes(path) || isProfile(path) || isNewsPost(path) || isFooter(path);
+  const updateNavigation = () => links.forEach(link => {
+    const path = new URL(link.href).pathname;
+    if (isNewsPost(current) && path === newsRoute) link.setAttribute('aria-current', 'location');
+    else if (path === (isProfile(current) ? teamRoute : current)) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  });
   const cache = new Map();
   let current = location.pathname;
   let busy = false;
@@ -157,7 +166,8 @@
       rememberPage();
       const returnToOrigin = isFooter(current) && (trigger?.hasAttribute('data-footer-back') || (historyChange && footerReturn?.path === url.pathname));
       const leavingProfile = isProfile(current) && url.pathname !== teamRoute;
-      const reverseScroll = isFooter(current) || leavingProfile;
+      const leavingNews = isNewsPost(current) && !isNewsListing(url.pathname);
+      const reverseScroll = isFooter(current) || leavingProfile || leavingNews;
       if (isFooter(url.pathname) || reverseScroll) {
         const departure = current;
         const origin = footerReturn;
@@ -173,10 +183,7 @@
             document.title = destination.title;
             current = url.pathname;
             footerReturn = isFooter(current) ? nextOrigin : null;
-            links.forEach(link => {
-              if (new URL(link.href).pathname === (isProfile(current) ? teamRoute : current)) link.setAttribute('aria-current', 'page');
-              else link.removeAttribute('aria-current');
-            });
+            updateNavigation();
             if (!historyChange) history.pushState({ footerReturn }, '', url);
             window.scrollTo({ top: returnToOrigin ? (origin?.scrollY ?? destination.scrollY ?? 0) : historyChange ? (destination.scrollY ?? 0) : 0, behavior: 'instant' });
             // Direct visits have no saved source. Land on the footer for the reverse scroll.
@@ -190,6 +197,8 @@
       const from = routeIndex(current);
       const to = routeIndex(url.pathname);
       const direction = to > from ? 1 : -1;
+      const returningToNews = isNewsPost(current) && isNewsListing(url.pathname);
+      const newsJourney = returningToNews || (isNewsListing(current) && isNewsPost(url.pathname));
       // Opt in only for marked homepage image links, never menu/history visits.
       const homePhoto = !historyChange && current === routes[0] && trigger?.hasAttribute('data-home-photo')
         ? trigger.getAttribute('data-home-photo') : null;
@@ -199,20 +208,29 @@
         : null;
       const returningToTeam = isProfile(current) && url.pathname === teamRoute;
       const sourcePortrait = returningToTeam ? document.querySelector('main .profile-portrait') : sourceLink?.querySelector('img');
-      const paths = reducedMotion.matches || isFooter(current) || homePhoto ? [url.pathname] : [current];
-      if (!reducedMotion.matches && !isFooter(current) && !homePhoto) {
+      const paths = reducedMotion.matches || isFooter(current) || homePhoto || newsJourney ? [url.pathname] : [current];
+      if (!reducedMotion.matches && !isFooter(current) && !homePhoto && !newsJourney) {
         const between = routes.filter((path, i) => direction > 0 ? i > from && i < to : i < from && i > to);
         paths.push(...(direction > 0 ? between : between.reverse()), url.pathname);
       }
       const pages = await Promise.all(paths.map(loadPage));
       const destination = pages.at(-1);
       let destinationMain = destination.main.cloneNode(true);
-      let destinationScroll = returningToTeam || historyChange ? (destination.scrollY || 0) : 0;
+      let destinationScroll = returningToTeam || returningToNews || historyChange ? (destination.scrollY || 0) : 0;
       const targetPortrait = returningToTeam
         ? [...destinationMain.querySelectorAll('.member-photo')].find(link => new URL(link.getAttribute('href'), location.href).pathname === current)?.querySelector('img')
         : researchId ? [...destinationMain.querySelectorAll('.research-image')].find(image => image.id === researchId)
         : destinationMain.querySelector(homePhoto === 'team' ? '.team-current-photo img' : '.profile-portrait');
-      if (!reducedMotion.matches && sourcePortrait && targetPortrait) {
+      if (newsJourney) {
+        const titleLink = (root, path) => [...root.querySelectorAll('[data-news-title]')]
+          .find(link => new URL(link.getAttribute('href'), location.href).pathname === path);
+        destinationScroll = await runNewsTitleZoom({
+          source: returningToNews ? document.querySelector('main [data-news-heading]') : titleLink(document.querySelector('main'), url.pathname),
+          target: returningToNews ? titleLink(destinationMain, current) : destinationMain.querySelector('[data-news-heading]'),
+          destinationMain, header, reducedMotion, scrollY: destinationScroll, returning: returningToNews,
+          prepareMedia: prepareVisibleMedia,
+        });
+      } else if (!reducedMotion.matches && sourcePortrait && targetPortrait) {
         overlay = document.createElement('div');
         overlay.className = 'page-journey profile-journey';
         overlay.inert = true;
@@ -349,10 +367,7 @@
       document.title = destination.title;
       current = url.pathname;
       footerReturn = null;
-      links.forEach(link => {
-        if (new URL(link.href).pathname === (isProfile(current) ? teamRoute : current)) link.setAttribute('aria-current', 'page');
-        else link.removeAttribute('aria-current');
-      });
+      updateNavigation();
       if (!historyChange) history.pushState(null, '', url);
       window.scrollTo({ top: destinationScroll, behavior: 'instant' });
       if (researchId && reducedMotion.matches) targetPortrait?.scrollIntoView({ block: 'center', behavior: 'instant' });
