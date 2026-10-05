@@ -1,6 +1,6 @@
 ---
 name: "Alissia Meyer"
-role: "phd"
+role: phd
 status: current
 thesis: ""
 roleLabel: "Ph.D. Student"
