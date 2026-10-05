@@ -1,8 +1,9 @@
 ---
 name: "Alissia Meyer"
-role: PhD
+role: "phd"
 status: current
-roleLabel: "Postdoctoral Associate"
+thesis: ""
+roleLabel: "Ph.D. Student"
 # email: "alissia.meyer@chem.uzh.ch"
 # photo: "people/enrico-lepre-profile.webp"
 # Optional 
