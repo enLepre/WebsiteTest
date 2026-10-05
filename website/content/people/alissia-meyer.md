@@ -16,7 +16,7 @@ roleLabel: "Ph.D. Student"
 # Lower order appears first within the role.
 order: 100
 # Change to false after replacing the example text.
-draft: true
+draft: false
 ---
 
 **Education**
