@@ -3,13 +3,11 @@ name: "Alissia Meyer"
 role: PhD
 status: current
 roleLabel: "Postdoctoral Associate"
-thesis: "Ph.D. Student"
 # email: "alissia.meyer@chem.uzh.ch"
-# Upload the photo to public/people/ first. Omit photo if unavailable.
 # photo: "people/enrico-lepre-profile.webp"
-# Optional smaller image for the team directory:
+# Optional 
 # thumbnail: "people/firstname-lastname-thumb.webp"
-# Optional actual image dimensions in pixels (positive whole numbers):
+# Optional
 # photoWidth: 1200
 # photoHeight: 1000
 # thumbnailWidth: 480
