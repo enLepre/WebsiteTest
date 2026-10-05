@@ -10,7 +10,7 @@ roleLabel: "Postdoctoral Associate"
 thesis: ""
 # Optional fields: remove the # and replace the example before using them.
 # email: "firstname.lastname@example.org"
-# Upload the photo to public/people/ first. Omit photo if unavailable.
+# Upload the photo to public/people/ first. Omit photo if unavailable to show the automatic silhouette placeholder.
 # photo: "people/firstname-lastname.webp"
 # Optional smaller image for the team directory:
 # thumbnail: "people/firstname-lastname-thumb.webp"

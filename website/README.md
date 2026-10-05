@@ -159,3 +159,7 @@ Before a slide, visible images on the journey are loaded and decoded in a hidden
 ## Publication search
 
 The Publications page has an instant search across titles, author names, journal details, DOIs, and years, plus a year dropdown. Multiple search words must all match; accents and capitalization are ignored. Search and year filters work together, display a result count, and can be cleared with one button. They apply equally to manual and imported publications and remain selected when navigating away and back during the same visit. No external search service is required; offline previews support the filters too. With JavaScript disabled, the full publication list remains available.
+
+## Profiles without portraits
+
+Omit or comment out `photo` when a portrait is unavailable. A neutral silhouette automatically appears on the Team page and personal profile. Do not use another person's portrait. When the real photo is ready, upload it under `website/public/people/` and set `photo: "people/firstname-lastname.webp"`. Set `draft: false` when the profile is ready to publish.

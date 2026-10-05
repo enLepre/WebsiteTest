@@ -145,6 +145,11 @@ test('Markdown updates drive the real static build', async t => {
       assert.doesNotMatch(html, /<strong>solar fuels<\/strong>/);
       assert.match(html, /href="\/test-repository\/team\/test-member\/"/);
       const profile = await readFile(join(fixture, 'dist/team/test-member/index.html'), 'utf8');
+      const memberCard = html.match(/<article[^>]*data-person="test-member"[\s\S]*?<\/article>/)?.[0];
+      assert.match(memberCard, /src="\/test-repository\/people\/portrait-placeholder\.svg"/);
+      assert.match(profile, /src="\/test-repository\/people\/portrait-placeholder\.svg"/);
+      assert.match(profile, /alt="Portrait placeholder for Test Member"/);
+      await readFile(join(fixture, 'dist/people/portrait-placeholder.svg'), 'utf8');
       const home = await readFile(join(fixture, 'dist/index.html'), 'utf8');
       assert.equal(profile.match(/<footer>[\s\S]*?<\/footer>/)?.[0], home.match(/<footer>[\s\S]*?<\/footer>/)?.[0]);
       assert.match(profile, /<strong>solar fuels<\/strong>/);

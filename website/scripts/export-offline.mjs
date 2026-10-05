@@ -28,7 +28,7 @@ for (const page of pages) {
     if (!match) continue;
     const assetPath = match[1];
     if (assetPath.split('/').includes('..')) throw new Error(`Invalid media path: ${assetPath}`);
-    const types = {webp:'image/webp',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webm:'video/webm',mp4:'video/mp4'};
+    const types = {svg:'image/svg+xml',webp:'image/webp',jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webm:'video/webm',mp4:'video/mp4'};
     const mime = types[assetPath.split('.').pop()];
     if (!mime) throw new Error(`Unsupported offline asset: ${assetPath}`);
     if (!cache.has(assetPath)) {
