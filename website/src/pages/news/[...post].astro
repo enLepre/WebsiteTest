@@ -1,0 +1,12 @@
+---
+import { getCollection } from 'astro:content';
+import SitePage from '../../components/SitePage.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('news', ({ data }) => !data.draft);
+  return posts.map(post => ({ params: { post: post.id }, props: { post } }));
+}
+
+const { post } = Astro.props;
+---
+<SitePage page="news-post" post={post} />

@@ -1,0 +1,8 @@
+---
+import SitePage from '../components/SitePage.astro';
+export function getStaticPaths() {
+  return ['research', 'team', 'news', 'publications', 'opportunities', 'contact'].map(page => ({params: {page}}));
+}
+const { page } = Astro.params;
+---
+<SitePage page={page} />

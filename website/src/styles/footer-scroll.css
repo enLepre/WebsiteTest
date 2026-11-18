@@ -1,0 +1,4 @@
+.footer-back{display:inline-block;margin-bottom:28px}
+.footer-scroll{position:fixed;inset:0;z-index:9;overflow:hidden;background:#fff;touch-action:none;overscroll-behavior:none}
+.footer-scroll-panel{position:absolute;inset:0;overflow:hidden;background:#fff;will-change:transform}
+.footer-scroll-panel .home-quote{position:static}
